@@ -30,3 +30,10 @@ jobs:
         env:
           FIREBASE_DB_URL: ${{ secrets.FIREBASE_DB_URL }}
         run: node scripts/sync-caylin-to-rtdb.js
+
+      - name: Generate sitemap
+        env:
+          FIREBASE_DB_URL: ${{ secrets.FIREBASE_DB_URL }}
+          SITE_BASE_URL: https://caylin.shop
+          DATABASE_PATH: products
+        run: node scripts/generate-sitemap.js
