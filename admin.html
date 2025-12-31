@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caylin Admin | Submissions & Approvals</title>
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    .admin-shell {
+      max-width: 1080px;
+    }
+
+    .panel {
+      margin-top: 18px;
+      padding: 24px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) * 1.2);
+      box-shadow: var(--shadow);
+    }
+
+    .panel__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .field small {
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="url"],
+    textarea,
+    select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 12px;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    input:disabled,
+    textarea:disabled,
+    select:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .inline-fields {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 6px 0 0;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status-chip[data-tone="success"] {
+      border-color: rgba(15, 125, 113, 0.6);
+      color: #b8f0e6;
+    }
+
+    .status-chip[data-tone="error"] {
+      border-color: rgba(255, 107, 107, 0.6);
+      color: #ffc5c5;
+    }
+
+    .approval-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .approval-card {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 12px;
+      padding: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      align-items: center;
+    }
+
+    .approval-card__media {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      border-radius: calc(var(--radius) * 0.9);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .approval-card__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .approval-card h4 {
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+
+    .approval-card p {
+      margin: 4px 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .pill-row {
+      margin-top: 0;
+    }
+
+    .btn--ghost {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn--danger {
+      border-color: rgba(255, 107, 107, 0.5);
+      color: #ffc5c5;
+    }
+
+    .tagline {
+      color: var(--muted);
+      margin: 6px 0 0;
+    }
+
+    .edit-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 40;
+    }
+
+    .edit-modal.is-open {
+      display: flex;
+    }
+
+    .edit-card {
+      background: #0f1417;
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) * 1.1);
+      width: min(720px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 12px;
+      position: relative;
+    }
+
+    .edit-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status-chip[data-tone="muted"] {
+      color: var(--muted);
+    }
+
+    #customCategoryField,
+    #editCustomCategoryField {
+      display: grid;
+    }
+
+    .approval-card__body p {
+      margin: 2px 0;
+    }
+
+    .btn--ghost {
+      border-color: var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+    }
+
+    @media (max-width: 720px) {
+      .approval-card {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell admin-shell">
+    <header class="hero">
+      <div class="hero__meta">
+        <p class="eyebrow">Caylin Admin</p>
+        <h1>Product submissions & approvals</h1>
+        <p class="lede">Authenticated users can submit products with an image upload; admins review and publish to the live Firebase RTDB catalog.</p>
+      </div>
+      <div class="hero__badge">
+        <span>Admin</span>
+        <strong>RTDB</strong>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">Access control</p>
+          <h2>Sign in to manage submissions</h2>
+        </div>
+        <div class="chip" id="adminChip">Admin UID not set</div>
+      </div>
+      <form id="authForm">
+        <div class="inline-fields">
+          <div class="field">
+            <label for="authEmail">Email</label>
+            <input id="authEmail" name="email" type="email" autocomplete="username" placeholder="admin@caylin.shop" required>
+          </div>
+          <div class="field">
+            <label for="authPassword">Password</label>
+            <input id="authPassword" name="password" type="password" autocomplete="current-password" placeholder="********" required>
+          </div>
+        </div>
+        <div class="actions-row">
+          <button type="submit" class="btn" id="signInBtn">Sign in</button>
+          <button type="button" class="ghost" id="signOutBtn" disabled>Sign out</button>
+          <span class="status-chip" id="authStatus">Not signed in</span>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">Packages</p>
+          <h2>Manage submission packages</h2>
+        </div>
+        <div class="chip">Admin only</div>
+      </div>
+      <form id="packageForm" class="inline-fields">
+        <div class="field">
+          <label for="pkgName">Name</label>
+          <input id="pkgName" type="text" placeholder="Free / Paid" required>
+        </div>
+        <div class="field">
+          <label for="pkgPrice">Price (USD)</label>
+          <input id="pkgPrice" type="number" min="0" step="0.01" placeholder="1.00" required>
+        </div>
+        <div class="field">
+          <label for="pkgLimit">Submission limit</label>
+          <input id="pkgLimit" type="number" min="0" step="1" placeholder="15" required>
+        </div>
+        <div class="actions-row">
+          <button type="submit" class="btn" id="pkgSave">Add/Update</button>
+          <span class="status-chip" id="pkgStatus">Admin sign-in required.</span>
+        </div>
+      </form>
+      <div id="packageList" class="approval-list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">Wallet</p>
+          <h2>Payment address</h2>
+        </div>
+        <div class="chip">Admin only</div>
+      </div>
+      <form id="walletForm" class="inline-fields">
+        <div class="field">
+          <label for="walletNetwork">Network</label>
+          <input id="walletNetwork" type="text" placeholder="TRON (TRX)" required>
+        </div>
+        <div class="field">
+          <label for="walletAddress">Wallet address</label>
+          <input id="walletAddress" type="text" placeholder="Wallet address" required>
+        </div>
+        <div class="actions-row">
+          <button type="submit" class="btn" id="walletSave">Save</button>
+          <span class="status-chip" id="walletStatus">Admin sign-in required.</span>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">Purchase requests</p>
+          <h2>Review payments</h2>
+        </div>
+        <div class="chip">Admin only</div>
+      </div>
+      <div class="panel-head">
+        <h3>Pending</h3>
+        <p id="purchaseStatus" class="status">Sign in to view requests.</p>
+      </div>
+      <div id="purchaseList" class="approval-list"></div>
+      <div class="panel-head" style="margin-top:12px;">
+        <h3>History</h3>
+        <p id="purchaseHistoryStatus" class="status">Approved/Rejected requests.</p>
+      </div>
+      <div id="purchaseHistoryList" class="approval-list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">Categories</p>
+          <h2>Add categories & subcategories</h2>
+        </div>
+        <div class="chip">Admin only</div>
+      </div>
+      <form id="categoryForm">
+        <div class="inline-fields">
+          <div class="field">
+            <label for="categoryName">Category</label>
+            <input id="categoryName" name="categoryName" type="text" placeholder="Accessories" required>
+          </div>
+          <div class="field">
+            <label for="subcategoryName">Subcategory (optional)</label>
+            <input id="subcategoryName" name="subcategoryName" type="text" placeholder="Veils">
+          </div>
+        </div>
+        <div class="actions-row">
+          <button type="submit" class="btn" id="addCategoryBtn">Add category</button>
+          <span class="status-chip" id="categoryStatus">Admin sign-in required.</span>
+        </div>
+      </form>
+      <div class="pill-row" id="categoriesList"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">Submit product</p>
+          <h2>Send a product for review</h2>
+        </div>
+        <div class="chip">Requires authentication</div>
+      </div>
+      <form id="submissionForm">
+        <div class="field">
+          <label for="productTitle">Product title</label>
+          <input id="productTitle" name="title" type="text" placeholder="Lace bridal gown" required>
+        </div>
+        <div class="field">
+          <label for="productDescription">Description</label>
+          <textarea id="productDescription" name="description" placeholder="Short description of the product" required></textarea>
+        </div>
+        <div class="inline-fields">
+          <div class="field">
+            <label for="productLink">Product link (URL)</label>
+            <input id="productLink" name="link" type="url" placeholder="https://example.com/product" required>
+          </div>
+          <div class="field">
+            <label for="productCategorySelect">Category</label>
+            <select id="productCategorySelect" name="categorySelect">
+              <option value="">Select a category</option>
+            </select>
+            <small id="categoryHint">Choose an existing category or pick "Other" to type your own.</small>
+          </div>
+        </div>
+        <div class="field" id="customCategoryField">
+          <label for="productCategory">Custom category (optional)</label>
+          <input id="productCategory" name="category" type="text" placeholder="Accessories" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="productTags">Tags (comma separated, optional)</label>
+          <input id="productTags" name="tags" type="text" placeholder="veil, tulle, cathedral">
+        </div>
+        <div class="inline-fields">
+          <div class="field">
+            <label for="contactMethod">Contact method</label>
+            <select id="contactMethod" name="contactMethod">
+              <option value="whatsapp">WhatsApp</option>
+              <option value="telegram">Telegram</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="contactValue">Contact number / handle</label>
+            <input id="contactValue" name="contactValue" type="text" placeholder="+971 50 123 4567 or @username" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="productImage">Product picture</label>
+          <input id="productImage" name="image" type="file" accept="image/*" required>
+          <small>Images are uploaded to the configured image host key (set in firebase-config.js).</small>
+        </div>
+        <div class="actions-row">
+          <button type="submit" class="btn" id="submitBtn">Submit for approval</button>
+          <span class="status-chip" id="submissionStatus">Sign in to submit</span>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">Approvals</p>
+          <h2>Pending submissions</h2>
+        </div>
+        <div class="chip">Admin only</div>
+      </div>
+      <div id="pendingStatus" class="status">Sign in with the admin UID to see the queue.</div>
+      <div id="pendingList" class="approval-list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">Published</p>
+          <h2>Approved products</h2>
+        </div>
+        <div class="chip">Admin only</div>
+      </div>
+      <div id="approvedStatus" class="status">Sign in with the admin UID to manage products.</div>
+      <div id="approvedList" class="approval-list"></div>
+    </section>
+  </div>
+
+  <div class="edit-modal" id="editModal" aria-hidden="true">
+    <div class="edit-card">
+      <button class="edit-close" id="editClose" aria-label="Close edit">x</button>
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">Edit product</p>
+          <h2 id="editTitleLabel">Editing product</h2>
+        </div>
+      </div>
+      <form id="editForm" class="submit-form">
+        <div class="field">
+          <label for="editTitle">Title</label>
+          <input id="editTitle" type="text" required>
+        </div>
+        <div class="field">
+          <label for="editDescription">Description</label>
+          <textarea id="editDescription" required></textarea>
+        </div>
+        <div class="inline-fields">
+          <div class="field">
+            <label for="editLink">Product link</label>
+            <input id="editLink" type="url" required>
+          </div>
+          <div class="field">
+            <label for="editCategorySelect">Category</label>
+            <select id="editCategorySelect">
+              <option value="">Select a category</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" id="editCustomCategoryField">
+          <label for="editCategory">Custom category (optional)</label>
+          <input id="editCategory" type="text" placeholder="Accessories">
+        </div>
+        <div class="field">
+          <label for="editTags">Tags (comma separated)</label>
+          <input id="editTags" type="text" placeholder="veil, tulle, cathedral">
+        </div>
+        <div class="field">
+          <label for="editImage">Image URL</label>
+          <input id="editImage" type="url" required>
+        </div>
+        <div class="edit-actions">
+          <button type="submit" class="btn" id="editSave">Save changes</button>
+          <button type="button" class="ghost" id="editCancel">Cancel</button>
+          <span class="status-chip" id="editStatus" data-tone="muted"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as config from './firebase-config.js';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js';
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      signOut
+    } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js';
+    import {
+      getDatabase,
+      ref,
+      push,
+      set,
+      update,
+      onValue
+    } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js';
+
+    const IMGBB_API_KEY = config.imgbbKey || '';
+    const SUBMISSIONS_PATH = 'submissions';
+    const APPROVED_PATH = config.databasePath || 'products';
+    const ADMIN_UID = config.adminUid || 'REPLACE_WITH_ADMIN_UID';
+
+    const ui = {
+      signInBtn: document.getElementById('signInBtn'),
+      signOutBtn: document.getElementById('signOutBtn'),
+      authForm: document.getElementById('authForm'),
+      authEmail: document.getElementById('authEmail'),
+      authPassword: document.getElementById('authPassword'),
+      authStatus: document.getElementById('authStatus'),
+      adminChip: document.getElementById('adminChip'),
+      submissionForm: document.getElementById('submissionForm'),
+      submitBtn: document.getElementById('submitBtn'),
+      submissionStatus: document.getElementById('submissionStatus'),
+      categoryForm: document.getElementById('categoryForm'),
+      categoryName: document.getElementById('categoryName'),
+      subcategoryName: document.getElementById('subcategoryName'),
+      addCategoryBtn: document.getElementById('addCategoryBtn'),
+      categoryStatus: document.getElementById('categoryStatus'),
+      categoriesList: document.getElementById('categoriesList'),
+      packageForm: document.getElementById('packageForm'),
+      pkgName: document.getElementById('pkgName'),
+      pkgPrice: document.getElementById('pkgPrice'),
+      pkgLimit: document.getElementById('pkgLimit'),
+      pkgSave: document.getElementById('pkgSave'),
+      pkgStatus: document.getElementById('pkgStatus'),
+      packageList: document.getElementById('packageList'),
+      walletForm: document.getElementById('walletForm'),
+      walletNetwork: document.getElementById('walletNetwork'),
+      walletAddress: document.getElementById('walletAddress'),
+      walletSave: document.getElementById('walletSave'),
+      walletStatus: document.getElementById('walletStatus'),
+      purchaseList: document.getElementById('purchaseList'),
+      purchaseStatus: document.getElementById('purchaseStatus'),
+      purchaseHistoryList: document.getElementById('purchaseHistoryList'),
+      purchaseHistoryStatus: document.getElementById('purchaseHistoryStatus'),
+      submitTitle: document.getElementById('productTitle'),
+      submitDescription: document.getElementById('productDescription'),
+      submitLink: document.getElementById('productLink'),
+      submitCategory: document.getElementById('productCategory'),
+      submitCategorySelect: document.getElementById('productCategorySelect'),
+      customCategoryField: document.getElementById('customCategoryField'),
+      submitTags: document.getElementById('productTags'),
+      pendingList: document.getElementById('pendingList'),
+      pendingStatus: document.getElementById('pendingStatus'),
+      approvedList: document.getElementById('approvedList'),
+      approvedStatus: document.getElementById('approvedStatus'),
+      contactMethod: document.getElementById('contactMethod'),
+      contactValue: document.getElementById('contactValue'),
+      productImage: document.getElementById('productImage'),
+      editModal: document.getElementById('editModal'),
+      editClose: document.getElementById('editClose'),
+      editForm: document.getElementById('editForm'),
+      editTitle: document.getElementById('editTitle'),
+      editTitleLabel: document.getElementById('editTitleLabel'),
+      editDescription: document.getElementById('editDescription'),
+      editLink: document.getElementById('editLink'),
+      editCategorySelect: document.getElementById('editCategorySelect'),
+      editCustomCategoryField: document.getElementById('editCustomCategoryField'),
+      editCategory: document.getElementById('editCategory'),
+      editTags: document.getElementById('editTags'),
+      editImage: document.getElementById('editImage'),
+      editStatus: document.getElementById('editStatus'),
+      editCancel: document.getElementById('editCancel'),
+      editSave: document.getElementById('editSave')
+    };
+
+    if (!config.firebaseConfig || !config.firebaseConfig.apiKey) {
+      ui.authStatus.textContent = 'firebase-config.js is missing credentials.';
+      ui.submissionStatus.textContent = 'Add Firebase config to use this page.';
+      ui.signInBtn.disabled = true;
+      ui.submitBtn.disabled = true;
+      throw new Error('Missing firebaseConfig');
+    }
+
+    const app = initializeApp(config.firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let pendingUnsubscribe = null;
+    let approvedUnsubscribe = null;
+    let categoriesUnsubscribe = null;
+    let packagesUnsubscribe = null;
+    let walletUnsubscribe = null;
+    let purchasesUnsubscribe = null;
+    let currentEditId = null;
+    let currentEditItem = null;
+    const categoryOptions = new Set();
+    let adminCategories = [];
+    let isAdmin = false;
+    let approvedProductsCache = [];
+    let packagesCache = [];
+
+    const setChip = (el, text, tone) => {
+      el.textContent = text;
+      el.dataset.tone = tone || '';
+    };
+
+    const setFormEnabled = (enabled) => {
+      Array.from(ui.submissionForm.elements).forEach((el) => {
+        el.disabled = !enabled;
+      });
+      ui.submitBtn.disabled = !enabled;
+    };
+
+    const syncCategoryInput = () => {
+      const selectVal = ui.submitCategorySelect?.value || '';
+      const showCustom = !selectVal || selectVal === 'custom';
+      if (ui.customCategoryField) {
+        ui.customCategoryField.style.display = showCustom ? 'grid' : 'none';
+      }
+      if (ui.submitCategory) {
+        ui.submitCategory.disabled = !showCustom;
+        if (!showCustom) {
+          ui.submitCategory.value = '';
+        }
+      }
+    };
+
+    const renderCategoryOptions = () => {
+      if (!ui.submitCategorySelect) return;
+      const select = ui.submitCategorySelect;
+      select.innerHTML = '';
+      const options = ['', ...Array.from(categoryOptions).sort(), 'custom'];
+      options.forEach((val, idx) => {
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = idx === 0 ? 'Select a category' : val === 'custom' ? 'Other (type below)' : val;
+        select.appendChild(option);
+      });
+      syncCategoryInput();
+    };
+
+    if (ui.submitCategorySelect) {
+      ui.submitCategorySelect.addEventListener('change', syncCategoryInput);
+    }
+    const syncEditCategoryInput = () => {
+      const selectVal = ui.editCategorySelect?.value || '';
+      const showCustom = !selectVal || selectVal === 'custom';
+      if (ui.editCustomCategoryField) {
+        ui.editCustomCategoryField.style.display = showCustom ? 'grid' : 'none';
+      }
+      if (ui.editCategory) {
+        ui.editCategory.disabled = !showCustom;
+        if (!showCustom) ui.editCategory.value = '';
+      }
+    };
+
+    const renderEditCategoryOptions = () => {
+      if (!ui.editCategorySelect) return;
+      const select = ui.editCategorySelect;
+      select.innerHTML = '';
+      const options = ['', ...Array.from(categoryOptions).sort(), 'custom'];
+      options.forEach((val, idx) => {
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = idx === 0 ? 'Select a category' : val === 'custom' ? 'Other (type below)' : val;
+        select.appendChild(option);
+      });
+      syncEditCategoryInput();
+    };
+
+    if (ui.editCategorySelect) {
+      ui.editCategorySelect.addEventListener('change', syncEditCategoryInput);
+    }
+
+    renderCategoryOptions();
+    renderEditCategoryOptions();
+
+    const toBase64 = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+    const uploadToImgbb = async (file) => {
+      if (!IMGBB_API_KEY) throw new Error('Image upload key not configured.');
+      const base64 = await toBase64(file);
+      const formData = new FormData();
+      formData.append('key', IMGBB_API_KEY);
+      formData.append('image', (base64 || '').split(',').pop());
+
+      const res = await fetch('https://api.imgbb.com/1/upload', {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) throw new Error('ImgBB upload failed');
+      const data = await res.json();
+      const url = data?.data?.display_url || data?.data?.url;
+      if (!url) throw new Error('ImgBB response missing URL');
+      return url;
+    };
+
+    const parseTags = (value) =>
+      (value || '')
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+
+    const normalizeCategories = (raw) => {
+      const list = [];
+      if (!raw) return list;
+      const pushVal = (val) => {
+        if (!val) return;
+        if (typeof val === 'string') {
+          list.push(val);
+          return;
+        }
+        if (typeof val === 'object') {
+          const name = val.name || '';
+          const sub = val.subcategory || '';
+          if (name) list.push(name);
+          if (name && sub) list.push(`${name} — ${sub}`);
+        }
+      };
+      if (Array.isArray(raw)) {
+        raw.forEach(pushVal);
+      } else if (typeof raw === 'object') {
+        Object.values(raw).forEach(pushVal);
+      }
+      return list;
+    };
+
+    const renderCategoriesList = () => {
+      if (!ui.categoriesList) return;
+      ui.categoriesList.innerHTML = '';
+      if (!adminCategories.length) return;
+      adminCategories.forEach((cat) => {
+        const pill = document.createElement('span');
+        pill.className = 'pill';
+        pill.textContent = cat;
+        ui.categoriesList.appendChild(pill);
+      });
+    };
+
+    const updateCategoryOptions = (products = [], categories = []) => {
+      approvedProductsCache = products;
+      categoryOptions.clear();
+      categories.forEach((cat) => categoryOptions.add(cat));
+      products.forEach((p) => {
+        if (p.category) categoryOptions.add(p.category);
+        const tags = Array.isArray(p.tags) ? p.tags : parseTags(p.tags || '');
+        tags.forEach((tag) => categoryOptions.add(tag));
+      });
+      renderCategoryOptions();
+      renderEditCategoryOptions();
+      renderCategoriesList();
+    };
+
+    const renderPackages = () => {
+      if (!ui.packageList) return;
+      ui.packageList.innerHTML = '';
+      packagesCache.forEach((pkg) => {
+        const card = document.createElement('article');
+        card.className = 'approval-card';
+        card.innerHTML = `
+          <div>
+            <h4>${pkg.name || pkg.id}</h4>
+            <p class="muted">$${pkg.price} — ${pkg.submissionLimit} submissions</p>
+          </div>
+          <div class="actions-row">
+            <button class="btn btn--ghost" data-action="fill" data-id="${pkg.id}">Edit</button>
+            <button class="ghost btn--danger" data-action="delete" data-id="${pkg.id}">Delete</button>
+          </div>
+        `;
+        card.addEventListener('click', async (evt) => {
+          const action = evt.target?.dataset?.action;
+          const id = evt.target?.dataset?.id;
+          if (!action || !id) return;
+          if (action === 'fill') {
+            ui.pkgName.value = pkg.name;
+            ui.pkgPrice.value = pkg.price;
+            ui.pkgLimit.value = pkg.submissionLimit;
+            ui.pkgSave.dataset.editId = id;
+            setChip(ui.pkgStatus, `Editing ${pkg.name}`, 'muted');
+          }
+          if (action === 'delete') {
+            if (!confirm(`Delete package ${pkg.name || id}?`)) return;
+            await set(ref(db, `packages/${id}`), null);
+            setChip(ui.pkgStatus, 'Package deleted.', 'success');
+          }
+        });
+        ui.packageList.appendChild(card);
+      });
+    };
+
+    const renderWallet = (wallet = {}) => {
+      if (!ui.walletStatus) return;
+      const { network, address } = wallet;
+      ui.walletStatus.textContent = network && address ? `${network} — ${address}` : 'No wallet saved.';
+    };
+
+    const openEditModal = (id, item) => {
+      currentEditId = id;
+      currentEditItem = item;
+      if (ui.editTitle) ui.editTitle.value = item.title || '';
+      if (ui.editTitleLabel) ui.editTitleLabel.textContent = `Editing ${item.title || id}`;
+      if (ui.editDescription) ui.editDescription.value = item.description || '';
+      if (ui.editLink) ui.editLink.value = item.productLink || item.link || item.sourceUrl || '';
+      if (ui.editImage) ui.editImage.value = item.image || item.imageUrl || '';
+      if (ui.editTags) ui.editTags.value = Array.isArray(item.tags) ? item.tags.join(', ') : parseTags(item.tags || '').join(', ');
+
+      const category = item.category || '';
+      const hasOption = category && categoryOptions.has(category);
+      if (ui.editCategorySelect) {
+        ui.editCategorySelect.value = hasOption ? category : 'custom';
+      }
+      if (ui.editCategory) {
+        ui.editCategory.value = hasOption ? '' : category;
+      }
+      syncEditCategoryInput();
+      if (ui.editStatus) setChip(ui.editStatus, 'Make changes and save.', 'muted');
+      if (ui.editModal) {
+        ui.editModal.classList.add('is-open');
+        ui.editModal.setAttribute('aria-hidden', 'false');
+      }
+    };
+
+    const closeEditModal = () => {
+      currentEditId = null;
+      currentEditItem = null;
+      if (ui.editModal) {
+        ui.editModal.classList.remove('is-open');
+        ui.editModal.setAttribute('aria-hidden', 'true');
+      }
+    };
+
+    const renderPending = (items) => {
+      ui.pendingList.innerHTML = '';
+      if (!items.length) {
+        ui.pendingStatus.textContent = 'No pending submissions.';
+        return;
+      }
+
+      ui.pendingStatus.textContent = `Pending: ${items.length}`;
+
+      const fragment = document.createDocumentFragment();
+      items.forEach(([id, item]) => {
+        const card = document.createElement('article');
+        card.className = 'approval-card';
+        card.dataset.id = id;
+        card.innerHTML = `
+          <div class="approval-card__media">
+            <img src="${item.imageUrl || item.image || 'https://frontend.wed2c.com/jobs-buyer-h5/static/media/default-small.77979952.png'}" alt="${item.title || 'Product image'}">
+          </div>
+          <div>
+            <h4>${item.title || 'Untitled submission'}</h4>
+            <p>${item.description || ''}</p>
+            <p><strong>Link:</strong> <a href="${item.productLink || item.link || '#'}" target="_blank" rel="noreferrer">${item.productLink || item.link || 'No link'}</a></p>
+            <p><strong>Contact:</strong> ${item.contactMethod || 'contact'} - ${item.contactValue || 'N/A'}</p>
+            <p class="subtle">Submitted by ${item.createdBy || 'unknown'} on ${item.createdAt ? new Date(item.createdAt).toLocaleString() : 'unknown'}</p>
+            <div class="actions-row">
+              <button class="btn" data-action="approve">Approve & publish</button>
+              <button class="ghost btn--danger" data-action="reject">Reject</button>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', async (evt) => {
+          const action = evt.target?.dataset?.action;
+          if (!action) return;
+          if (action === 'approve') {
+            await approveSubmission(id, item, evt.target);
+          }
+          if (action === 'reject') {
+            await rejectSubmission(id, item, evt.target);
+          }
+        });
+        fragment.appendChild(card);
+      });
+
+      ui.pendingList.appendChild(fragment);
+    };
+
+    const renderApproved = (items) => {
+      if (!ui.approvedList) return;
+      ui.approvedList.innerHTML = '';
+      if (!items.length) {
+        ui.approvedStatus.textContent = 'No approved products yet.';
+        return;
+      }
+      ui.approvedStatus.textContent = `Published: ${items.length}`;
+
+      const fragment = document.createDocumentFragment();
+      items.forEach(([id, item]) => {
+        const card = document.createElement('article');
+        card.className = 'approval-card';
+        card.dataset.id = id;
+        card.innerHTML = `
+          <div class="approval-card__media">
+            <img src="${item.image || item.imageUrl || 'https://frontend.wed2c.com/jobs-buyer-h5/static/media/default-small.77979952.png'}" alt="${item.title || 'Product image'}">
+          </div>
+          <div>
+            <h4>${item.title || 'Untitled product'}</h4>
+            <p>${item.description || ''}</p>
+            <p><strong>Category:</strong> ${item.category || 'N/A'}</p>
+            <p><strong>Link:</strong> <a href="${item.productLink || item.link || item.sourceUrl || '#'}" target="_blank" rel="noreferrer">${item.productLink || item.link || item.sourceUrl || 'No link'}</a></p>
+            <div class="actions-row">
+              <button class="btn btn--ghost" data-action="edit">Edit</button>
+              <button class="ghost btn--danger" data-action="delete">Delete</button>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', async (evt) => {
+          const action = evt.target?.dataset?.action;
+          if (!action) return;
+          if (action === 'edit') {
+            openEditModal(id, item);
+          }
+          if (action === 'delete') {
+            await deleteApprovedProduct(id, item, evt.target);
+          }
+        });
+        fragment.appendChild(card);
+      });
+
+      ui.approvedList.appendChild(fragment);
+    };
+
+    const startPendingListener = () => {
+      if (pendingUnsubscribe) return;
+      const submissionsRef = ref(db, SUBMISSIONS_PATH);
+      pendingUnsubscribe = onValue(
+        submissionsRef,
+        (snapshot) => {
+          const data = snapshot.val() || {};
+          const pending = Object.entries(data).filter(
+            ([, value]) => !value.status || value.status === 'pending'
+          );
+          renderPending(pending);
+        },
+        (error) => {
+          setChip(ui.pendingStatus, `Failed to load submissions: ${error.message}`, 'error');
+        }
+      );
+    };
+
+    const stopPendingListener = () => {
+      if (pendingUnsubscribe) {
+        pendingUnsubscribe();
+        pendingUnsubscribe = null;
+      }
+      ui.pendingList.innerHTML = '';
+      ui.pendingStatus.textContent = 'Sign in with the admin UID to see the queue.';
+    };
+
+    const startApprovedListener = () => {
+      if (approvedUnsubscribe) return;
+      const approvedRef = ref(db, APPROVED_PATH);
+      approvedUnsubscribe = onValue(
+        approvedRef,
+        (snapshot) => {
+          const data = snapshot.val() || {};
+          const items = Object.entries(data);
+          renderApproved(items);
+          updateCategoryOptions(
+            items.map(([, value]) => value),
+            adminCategories
+          );
+        },
+        (error) => {
+          if (ui.approvedStatus) setChip(ui.approvedStatus, `Failed to load products: ${error.message}`, 'error');
+        }
+      );
+    };
+
+    const stopApprovedListener = () => {
+      if (approvedUnsubscribe) {
+        approvedUnsubscribe();
+        approvedUnsubscribe = null;
+      }
+      if (ui.approvedList) ui.approvedList.innerHTML = '';
+      if (ui.approvedStatus) ui.approvedStatus.textContent = 'Sign in with the admin UID to manage products.';
+    };
+
+    const startCategoryListener = () => {
+      if (categoriesUnsubscribe) return;
+      const categoriesRef = ref(db, 'categories');
+      categoriesUnsubscribe = onValue(
+        categoriesRef,
+        (snapshot) => {
+          adminCategories = normalizeCategories(snapshot.val());
+          updateCategoryOptions(approvedProductsCache, adminCategories);
+        },
+        () => {}
+      );
+    };
+
+    const startPackagesListener = () => {
+      if (packagesUnsubscribe) return;
+      const packagesRef = ref(db, 'packages');
+      packagesUnsubscribe = onValue(
+        packagesRef,
+        (snapshot) => {
+          const data = snapshot.val() || {};
+          packagesCache = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+          renderPackages();
+        },
+        () => {}
+      );
+    };
+
+    const startWalletListener = () => {
+      if (walletUnsubscribe) return;
+      const walletRef = ref(db, 'settings/wallet');
+      walletUnsubscribe = onValue(
+        walletRef,
+        (snapshot) => {
+          renderWallet(snapshot.val() || {});
+        },
+        () => {}
+      );
+    };
+
+    const startPurchaseListener = () => {
+      if (purchasesUnsubscribe) return;
+      const purchasesRef = ref(db, 'purchaseRequests');
+      purchasesUnsubscribe = onValue(
+        purchasesRef,
+        (snapshot) => {
+          const data = snapshot.val() || {};
+          renderPurchases(Object.entries(data));
+        },
+        () => {}
+      );
+    };
+
+    const stopCategoryListener = () => {
+      if (categoriesUnsubscribe) {
+        categoriesUnsubscribe();
+        categoriesUnsubscribe = null;
+      }
+      adminCategories = [];
+      renderCategoriesList();
+      updateCategoryOptions([], adminCategories);
+    };
+
+    const stopPackagesListener = () => {
+      if (packagesUnsubscribe) {
+        packagesUnsubscribe();
+        packagesUnsubscribe = null;
+      }
+      packagesCache = [];
+      renderPackages();
+    };
+
+    const stopWalletListener = () => {
+      if (walletUnsubscribe) {
+        walletUnsubscribe();
+        walletUnsubscribe = null;
+      }
+      renderWallet({});
+    };
+
+    const stopPurchaseListener = () => {
+      if (purchasesUnsubscribe) {
+        purchasesUnsubscribe();
+        purchasesUnsubscribe = null;
+      }
+      if (ui.purchaseList) ui.purchaseList.innerHTML = '';
+      if (ui.purchaseStatus) ui.purchaseStatus.textContent = 'Sign in to view requests.';
+    };
+
+    const editApprovedProduct = async (id, item, buttonEl) => {
+      const btn = buttonEl;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      try {
+        const titleInput = prompt('Edit title', item.title || '');
+        const descInput = prompt('Edit description', item.description || '');
+        const imageInput = prompt('Edit image URL', item.image || item.imageUrl || '');
+        const linkInput = prompt('Edit link', item.productLink || item.link || item.sourceUrl || '');
+        const categoryInput = prompt('Edit category', item.category || '');
+        const tagsInput = prompt('Edit tags (comma separated)', (item.tags || []).join(', '));
+
+        const nextTitle = titleInput ?? item.title;
+        const nextDescription = descInput ?? item.description;
+        const nextImage = imageInput ?? item.image ?? item.imageUrl;
+        const nextLink = linkInput ?? item.productLink ?? item.link ?? item.sourceUrl;
+        const nextCategory = categoryInput ?? item.category;
+        const nextTagsRaw = tagsInput ?? (item.tags || []).join(', ');
+
+        if (!nextTitle || !nextImage) {
+          setChip(ui.approvedStatus, 'Title and image are required.', 'error');
+          return;
+        }
+
+        const updated = {
+          ...item,
+          title: nextTitle.trim(),
+          description: (nextDescription || '').trim(),
+          image: (nextImage || '').trim(),
+          productLink: (nextLink || '').trim(),
+          link: (nextLink || '').trim(),
+          sourceUrl: (nextLink || '').trim(),
+          category: (nextCategory || '').trim(),
+          tags: parseTags(nextTagsRaw),
+          updatedAt: Date.now()
+        };
+
+        await set(ref(db, `${APPROVED_PATH}/${id}`), updated);
+        setChip(ui.approvedStatus, 'Product updated.', 'success');
+      } catch (err) {
+        setChip(ui.approvedStatus, `Update failed: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Edit';
+      }
+    };
+
+    const deleteApprovedProduct = async (id, item, buttonEl) => {
+      if (!confirm(`Delete product "${item.title || id}"?`)) return;
+      const btn = buttonEl;
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+      try {
+        await set(ref(db, `${APPROVED_PATH}/${id}`), null);
+        setChip(ui.approvedStatus, 'Product deleted.', 'success');
+      } catch (err) {
+        setChip(ui.approvedStatus, `Delete failed: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+      }
+    };
+
+    const renderPurchases = (entries) => {
+      if (!ui.purchaseList || !ui.purchaseHistoryList) return;
+      ui.purchaseList.innerHTML = '';
+      ui.purchaseHistoryList.innerHTML = '';
+
+      const pending = entries.filter(([, v]) => (v.status || 'pending') === 'pending');
+      const history = entries.filter(([, v]) => (v.status || 'pending') !== 'pending');
+
+      ui.purchaseStatus.textContent = pending.length ? `Pending: ${pending.length}` : 'No pending requests.';
+      ui.purchaseHistoryStatus.textContent = history.length ? `History: ${history.length}` : 'No approved/rejected requests.';
+
+      const makeCard = (id, value, allowActions) => {
+        const card = document.createElement('article');
+        card.className = 'approval-card';
+        card.innerHTML = `
+          <div>
+            <h4>${value.packageRequested || 'Package'} — $${value.amount}</h4>
+            <p class="muted">User: ${value.uid || ''}</p>
+            <p><strong>Network:</strong> ${value.network || ''}</p>
+            <p><strong>TX:</strong> ${value.txId || ''}</p>
+            <p class="muted">${value.note || ''}</p>
+            <p class="muted">Status: ${value.status || 'pending'}</p>
+          </div>
+          ${
+            allowActions
+              ? `<div class="actions-row">
+                  <button class="btn" data-action="approve" data-id="${id}">Approve</button>
+                  <button class="ghost btn--danger" data-action="reject" data-id="${id}">Reject</button>
+                </div>`
+              : ''
+          }
+        `;
+        if (allowActions) {
+          card.addEventListener('click', async (evt) => {
+            const action = evt.target?.dataset?.action;
+            if (!action) return;
+            if (action === 'approve') {
+              await approvePurchase(id, value, evt.target);
+            }
+            if (action === 'reject') {
+              await rejectPurchase(id, value, evt.target);
+            }
+          });
+        }
+        return card;
+      };
+
+      const pendingFrag = document.createDocumentFragment();
+      pending.forEach(([id, value]) => pendingFrag.appendChild(makeCard(id, value, true)));
+      ui.purchaseList.appendChild(pendingFrag);
+
+      const historyFrag = document.createDocumentFragment();
+      history.forEach(([id, value]) => historyFrag.appendChild(makeCard(id, value, false)));
+      ui.purchaseHistoryList.appendChild(historyFrag);
+    };
+
+    const approvePurchase = async (id, value, buttonEl) => {
+      const btn = buttonEl;
+      btn.disabled = true;
+      btn.textContent = 'Approving...';
+      try {
+        const pkg = packagesCache.find((p) => p.id === value.packageRequested);
+        const submissionLimit = pkg ? pkg.submissionLimit : 0;
+        if (!value.uid) throw new Error('Missing user');
+        if (!submissionLimit) throw new Error('Package not found or limit missing');
+        await set(ref(db, `users/${value.uid}/submissionLimit`), submissionLimit);
+        await set(ref(db, `users/${value.uid}/package`), pkg?.name || value.packageRequested);
+        await set(ref(db, `users/${value.uid}/submissionsUsed`), 0);
+        await set(ref(db, `purchaseRequests/${id}/status`), 'approved');
+        setChip(ui.purchaseStatus, 'Approved and user limit updated.', 'success');
+      } catch (err) {
+        setChip(ui.purchaseStatus, `Approve failed: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Approve';
+      }
+    };
+
+    const rejectPurchase = async (id, value, buttonEl) => {
+      const note = prompt('Optional rejection note:') || '';
+      const btn = buttonEl;
+      btn.disabled = true;
+      btn.textContent = 'Rejecting...';
+      try {
+        await set(ref(db, `purchaseRequests/${id}/status`), 'rejected');
+        if (note) await set(ref(db, `purchaseRequests/${id}/note`), note);
+        setChip(ui.purchaseStatus, 'Request rejected.', 'muted');
+      } catch (err) {
+        setChip(ui.purchaseStatus, `Reject failed: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Reject';
+      }
+    };
+
+    if (ui.editClose) ui.editClose.addEventListener('click', closeEditModal);
+    if (ui.editCancel) ui.editCancel.addEventListener('click', closeEditModal);
+    if (ui.editModal) {
+      ui.editModal.addEventListener('click', (evt) => {
+        if (evt.target === ui.editModal) closeEditModal();
+      });
+    }
+
+    if (ui.editForm) {
+      ui.editForm.addEventListener('submit', async (evt) => {
+        evt.preventDefault();
+        if (!currentEditId || !currentEditItem) {
+          setChip(ui.editStatus, 'No product selected.', 'error');
+          return;
+        }
+        const title = ui.editTitle?.value.trim();
+        const description = ui.editDescription?.value.trim();
+        const productLink = ui.editLink?.value.trim();
+        const imageUrl = ui.editImage?.value.trim();
+        const selectedCategory = ui.editCategorySelect?.value || '';
+        const category =
+          selectedCategory && selectedCategory !== 'custom'
+            ? selectedCategory
+            : (ui.editCategory?.value || '').trim();
+        const tags = parseTags(ui.editTags?.value || '');
+
+        if (!title || !imageUrl) {
+          setChip(ui.editStatus, 'Title and image are required.', 'error');
+          return;
+        }
+
+        try {
+          setChip(ui.editStatus, 'Saving...', 'muted');
+          const updated = {
+            ...currentEditItem,
+            title,
+            description,
+            image: imageUrl,
+            imageUrl,
+            productLink,
+            link: productLink,
+            sourceUrl: productLink,
+            category,
+            tags,
+            updatedAt: Date.now()
+          };
+          await set(ref(db, `${APPROVED_PATH}/${currentEditId}`), updated);
+          setChip(ui.editStatus, 'Saved.', 'success');
+          setChip(ui.approvedStatus, 'Product updated.', 'success');
+          closeEditModal();
+        } catch (err) {
+          setChip(ui.editStatus, `Save failed: ${err.message}`, 'error');
+        }
+      });
+    }
+
+    const approveSubmission = async (id, item, buttonEl) => {
+      const btn = buttonEl;
+      btn.disabled = true;
+      btn.textContent = 'Publishing...';
+      try {
+        const productId =
+          item.productId ||
+          item.slug ||
+          item.id ||
+          id;
+        const payload = {
+          id: productId,
+          title: item.title || 'Untitled product',
+          description: item.description || '',
+          image: item.imageUrl || item.image,
+          url: item.productLink || item.link || '#',
+          link: item.productLink || item.link || '#',
+          contactMethod: item.contactMethod || '',
+          contactValue: item.contactValue || '',
+          category: item.category || 'Community',
+          tags: item.tags || [],
+          badge: 'Community',
+          createdBy: item.createdBy || '',
+          updatedAt: Date.now()
+        };
+
+        await set(ref(db, `${APPROVED_PATH}/${productId}`), payload);
+        await update(ref(db, `${SUBMISSIONS_PATH}/${id}`), {
+          status: 'approved',
+          approvedAt: Date.now(),
+          approvedBy: auth.currentUser?.uid || ''
+        });
+        setChip(ui.pendingStatus, 'Published to products.', 'success');
+      } catch (err) {
+        setChip(ui.pendingStatus, `Approval failed: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Approve & publish';
+      }
+    };
+
+    const rejectSubmission = async (id, item, buttonEl) => {
+      const reason = prompt('Optional rejection note (visible in RTDB):') || '';
+      const btn = buttonEl;
+      btn.disabled = true;
+      btn.textContent = 'Rejecting...';
+      try {
+        await update(ref(db, `${SUBMISSIONS_PATH}/${id}`), {
+          status: 'rejected',
+          rejectedAt: Date.now(),
+          rejectedBy: auth.currentUser?.uid || '',
+          rejectionReason: reason
+        });
+        setChip(ui.pendingStatus, 'Submission rejected.', 'success');
+      } catch (err) {
+        setChip(ui.pendingStatus, `Rejection failed: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Reject';
+      }
+    };
+
+    ui.authForm.addEventListener('submit', async (evt) => {
+      evt.preventDefault();
+      setChip(ui.authStatus, 'Signing in...', 'muted');
+      ui.signInBtn.disabled = true;
+      try {
+        await signInWithEmailAndPassword(auth, ui.authEmail.value, ui.authPassword.value);
+      } catch (err) {
+        setChip(ui.authStatus, err.message, 'error');
+      } finally {
+        ui.signInBtn.disabled = false;
+      }
+    });
+
+    ui.signOutBtn.addEventListener('click', async () => {
+      await signOut(auth);
+    });
+
+    const addCategory = async (evt) => {
+      evt.preventDefault();
+      if (!isAdmin) {
+        setChip(ui.categoryStatus, 'Admin sign-in required.', 'error');
+        return;
+      }
+      const name = (ui.categoryName?.value || '').trim();
+      const sub = (ui.subcategoryName?.value || '').trim();
+      if (!name) {
+        setChip(ui.categoryStatus, 'Category is required.', 'error');
+        return;
+      }
+      try {
+        ui.addCategoryBtn.disabled = true;
+        setChip(ui.categoryStatus, 'Saving...', 'muted');
+        const payload = sub ? { name, subcategory: sub } : { name };
+        await set(push(ref(db, 'categories')), payload);
+        setChip(ui.categoryStatus, 'Category added.', 'success');
+        if (ui.categoryForm) ui.categoryForm.reset();
+      } catch (err) {
+        setChip(ui.categoryStatus, `Failed: ${err.message}`, 'error');
+      } finally {
+        ui.addCategoryBtn.disabled = false;
+      }
+    };
+
+    if (ui.categoryForm) {
+      ui.categoryForm.addEventListener('submit', addCategory);
+    }
+
+    if (ui.packageForm) {
+      ui.packageForm.addEventListener('submit', async (evt) => {
+        evt.preventDefault();
+        if (!isAdmin) {
+          setChip(ui.pkgStatus, 'Admin only.', 'error');
+          return;
+        }
+        const name = (ui.pkgName.value || '').trim();
+        const price = parseFloat(ui.pkgPrice.value || '0');
+        const limit = parseInt(ui.pkgLimit.value || '0', 10);
+        if (!name || Number.isNaN(price) || Number.isNaN(limit)) {
+          setChip(ui.pkgStatus, 'Fill all fields.', 'error');
+          return;
+        }
+        const editId = ui.pkgSave.dataset.editId || null;
+        try {
+          ui.pkgSave.disabled = true;
+          setChip(ui.pkgStatus, 'Saving...', 'muted');
+          const targetRef = ref(db, `packages/${editId || push(ref(db, 'packages')).key}`);
+          await set(targetRef, { name, price, submissionLimit: limit });
+          ui.packageForm.reset();
+          ui.pkgSave.dataset.editId = '';
+          setChip(ui.pkgStatus, 'Saved.', 'success');
+        } catch (err) {
+          setChip(ui.pkgStatus, err.message, 'error');
+        } finally {
+          ui.pkgSave.disabled = false;
+        }
+      });
+    }
+
+    if (ui.walletForm) {
+      ui.walletForm.addEventListener('submit', async (evt) => {
+        evt.preventDefault();
+        if (!isAdmin) {
+          setChip(ui.walletStatus, 'Admin only.', 'error');
+          return;
+        }
+        const network = (ui.walletNetwork.value || '').trim();
+        const address = (ui.walletAddress.value || '').trim();
+        if (!network || !address) {
+          setChip(ui.walletStatus, 'Fill all fields.', 'error');
+          return;
+        }
+        try {
+          ui.walletSave.disabled = true;
+          setChip(ui.walletStatus, 'Saving...', 'muted');
+          await set(ref(db, 'settings/wallet'), { network, address });
+          setChip(ui.walletStatus, 'Saved.', 'success');
+        } catch (err) {
+          setChip(ui.walletStatus, err.message, 'error');
+        } finally {
+          ui.walletSave.disabled = false;
+        }
+      });
+    }
+
+    ui.submissionForm.addEventListener('submit', async (evt) => {
+      evt.preventDefault();
+      if (!auth.currentUser) {
+        setChip(ui.submissionStatus, 'Sign in before submitting.', 'error');
+        return;
+      }
+      syncCategoryInput();
+      const file = ui.productImage.files[0];
+      if (!file) {
+        setChip(ui.submissionStatus, 'Please choose an image.', 'error');
+        return;
+      }
+
+      ui.submitBtn.disabled = true;
+      setChip(ui.submissionStatus, 'Uploading image...', 'muted');
+      try {
+        const imageUrl = await uploadToImgbb(file);
+        setChip(ui.submissionStatus, 'Saving to Firebase...', 'muted');
+        const tags = parseTags(document.getElementById('productTags').value);
+        const selectedCategory = ui.submitCategorySelect?.value || '';
+        const category =
+          selectedCategory && selectedCategory !== 'custom'
+            ? selectedCategory
+            : (ui.submitCategory?.value || '').trim();
+        const payload = {
+          title: document.getElementById('productTitle').value.trim(),
+          description: document.getElementById('productDescription').value.trim(),
+          productLink: document.getElementById('productLink').value.trim(),
+          category,
+          tags,
+          contactMethod: ui.contactMethod.value,
+          contactValue: ui.contactValue.value.trim(),
+          imageUrl,
+          createdAt: Date.now(),
+          createdBy: auth.currentUser.uid,
+          status: 'pending'
+        };
+        await set(push(ref(db, SUBMISSIONS_PATH)), payload);
+        ui.submissionForm.reset();
+        setChip(ui.submissionStatus, 'Submitted for approval. Admin review pending.', 'success');
+      } catch (err) {
+        setChip(ui.submissionStatus, `Submission failed: ${err.message}`, 'error');
+      } finally {
+        ui.submitBtn.disabled = false;
+      }
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      startCategoryListener();
+      isAdmin = user?.uid === ADMIN_UID && ADMIN_UID !== 'REPLACE_WITH_ADMIN_UID';
+      ui.signOutBtn.disabled = !user;
+      setFormEnabled(Boolean(user));
+
+      if (user) {
+        setChip(ui.authStatus, `Signed in as ${user.email || user.uid}`, 'success');
+      } else {
+        setChip(ui.authStatus, 'Not signed in', 'muted');
+      }
+
+      if (isAdmin) {
+        setChip(ui.adminChip, 'Admin verified', 'success');
+        startPendingListener();
+        startApprovedListener();
+        startCategoryListener();
+        startPackagesListener();
+        startWalletListener();
+        startPurchaseListener();
+      } else {
+        if (ADMIN_UID === 'REPLACE_WITH_ADMIN_UID') {
+          setChip(ui.adminChip, 'Set ADMIN UID in firebase-config.js', 'error');
+        } else {
+          setChip(ui.adminChip, `Admin UID: ${ADMIN_UID.slice(0, 6)}...`, 'muted');
+        }
+        stopPendingListener();
+        stopApprovedListener();
+        stopCategoryListener();
+        stopPackagesListener();
+        stopWalletListener();
+        stopPurchaseListener();
+      }
+    });
+  </script>
+</body>
+</html>

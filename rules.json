@@ -1,0 +1,81 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": false,
+
+    "settings": {
+      "wallet": {
+        ".read": true,
+        ".write": "auth != null && auth.uid === 'RM3jZA4AYeVCgBd1VbGYjYSRz4R2'",
+        "network": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "address": { ".validate": "newData.isString() && newData.val().length <= 200" }
+      }
+    },
+
+    "packages": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'RM3jZA4AYeVCgBd1VbGYjYSRz4R2'",
+      "$packageId": {
+        ".validate": "newData.hasChildren(['name','price','submissionLimit']) && newData.child('name').isString() && newData.child('name').val().length <= 80 && newData.child('price').isNumber() && newData.child('price').val() >= 0 && newData.child('submissionLimit').isNumber() && newData.child('submissionLimit').val() >= 0"
+      }
+    },
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "(auth != null && auth.uid === 'RM3jZA4AYeVCgBd1VbGYjYSRz4R2') || (auth != null && auth.uid === $uid && (( !data.exists() && newData.child('submissionLimit').isNumber() && newData.child('submissionLimit').val() >= 0 && newData.child('submissionLimit').val() <= 5 && !newData.child('package').exists()) || ( data.exists() && !newData.child('submissionLimit').exists() && !newData.child('package').exists())))",
+        "submissionLimit": { ".validate": "(auth != null && auth.uid === 'RM3jZA4AYeVCgBd1VbGYjYSRz4R2' && newData.isNumber() && newData.val() >= 0) || (!data.exists() && auth != null && auth.uid === $uid && newData.isNumber() && newData.val() >= 0 && newData.val() <= 5)" },
+        "submissionsUsed": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "package": { ".validate": "auth != null && auth.uid === 'RM3jZA4AYeVCgBd1VbGYjYSRz4R2' && newData.isString()" },
+        "email": { ".validate": "newData.isString()" },
+        "displayName": { ".validate": "newData.isString() || newData.val() === null" }
+      }
+    },
+
+    "products": {
+      ".read": true,
+      "$productId": {
+        ".write": "auth != null && auth.uid === 'RM3jZA4AYeVCgBd1VbGYjYSRz4R2'",
+        ".validate": "newData.val() === null || newData.hasChildren(['title', 'description', 'image'])"
+      }
+    },
+
+    "submissions": {
+      ".read": true,
+      "$submissionId": {
+        ".write": "auth != null && (auth.uid === 'RM3jZA4AYeVCgBd1VbGYjYSRz4R2' || (auth.uid === newData.child('createdBy').val()))",
+        "title": { ".validate": "newData.isString() && newData.val().length <= 160" },
+        "description": { ".validate": "newData.isString() && newData.val().length <= 1200" },
+        "productLink": { ".validate": "newData.isString()" },
+        "category": { ".validate": "newData.isString() || newData.val() === null" },
+        "tags": { ".validate": "newData.isString() || newData.hasChildren() || newData.val() === null" },
+        "contactMethod": { ".validate": "newData.isString()" },
+        "contactValue": { ".validate": "newData.isString()" },
+        "imageUrl": { ".validate": "newData.isString()" },
+        "createdAt": { ".validate": "newData.isNumber()" },
+        "createdBy": { ".validate": "newData.isString()" },
+        "status": { ".validate": "newData.isString()" },
+        "requestedFeature": { ".validate": "newData.isBoolean() || newData.val() === null" },
+        "deleteRequested": { ".validate": "newData.isBoolean() || newData.val() === null" },
+        "editRequested": { ".validate": "newData.isBoolean() || newData.val() === null" },
+        "editPayload": { ".validate": "newData.isString() || newData.val() === null" }
+      }
+    },
+
+    "purchaseRequests": {
+      "$requestId": {
+        ".read": "auth != null && (auth.uid === 'RM3jZA4AYeVCgBd1VbGYjYSRz4R2' || auth.uid === data.child('uid').val())",
+        ".write": "auth != null && ((auth.uid === newData.child('uid').val()) || auth.uid === 'RM3jZA4AYeVCgBd1VbGYjYSRz4R2')",
+        ".validate": "newData.hasChildren(['uid','amount','txId','network','walletAddress','packageRequested','createdAt','status']) && newData.child('uid').isString() && newData.child('amount').isNumber() && newData.child('amount').val() >= 1 && newData.child('txId').isString() && newData.child('network').isString() && newData.child('walletAddress').isString() && newData.child('packageRequested').isString() && newData.child('createdAt').isNumber() && newData.child('status').isString()"
+      }
+    },
+
+    "categories": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'RM3jZA4AYeVCgBd1VbGYjYSRz4R2'",
+      "$categoryId": {
+        ".validate": "(newData.isString() && newData.val().length <= 80) || (newData.hasChildren(['name']) && newData.child('name').isString() && newData.child('name').val().length <= 80 && (!newData.child('subcategory').exists() || (newData.child('subcategory').isString() && newData.child('subcategory').val().length <= 80)))"
+      }
+    }
+  }
+}

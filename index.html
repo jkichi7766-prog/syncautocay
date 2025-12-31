@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caylin.shop | Modern Wedding & Lifestyle Shop</title>
+  <meta name="description" content="Caylin.shop Shop - browse curated wedding, occasion, and lifestyle products with fast filters, deep links, and admin-approved community submissions.">
+  <meta name="keywords" content="Caylin shop, wedding dresses, bridal accessories, occasion wear, community products, lifestyle finds">
+  <meta name="theme-color" content="#0f7d71">
+  <link rel="canonical" href="https://caylin.shop/">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="icon" type="image/png" href="./fevicon.png">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+  <meta property="og:title" content="Caylin Shop | Modern Wedding & Lifestyle Finds">
+  <meta property="og:description" content="Clean, indexable catalog of Caylin products, powered by Firebase RTDB.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://caylin.shop/">
+  <meta property="og:image" content="https://caylin.wed2c.com/favicon.ico">
+  <meta property="og:site_name" content="Caylin Shop">
+  <meta name="twitter:site" content="@caylinshop">
+  <meta name="twitter:title" content="Caylin Shop | Modern Wedding & Lifestyle Finds">
+  <meta name="twitter:description" content="Clean, indexable catalog of Caylin products, powered by Firebase RTDB.">
+  <meta name="twitter:image" content="https://caylin.wed2c.com/favicon.ico">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Caylin Shop",
+    "url": "https://caylin.shop",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://caylin.shop/?query={search_term_string}",
+      "query-input": "required name=search_term_string"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Caylin Shop",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://caylin.wed2c.com/favicon.ico"
+      }
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="loader" id="loader" aria-live="polite">
+    <div class="loader__content">
+      <div class="loader__icon">
+        <div class="cart-box"></div>
+        <div class="cart-wheel"></div>
+        <div class="cart-wheel cart-wheel--right"></div>
+      </div>
+      <div class="loader__text">Caylin.shop Shop</div>
+      <div class="loader__track">
+        <div class="loader__bar"></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-shell">
+    <nav class="top-nav">
+      <div class="nav-brand">
+        <span class="dot"></span>
+        <strong>Caylin Shop</strong>
+      </div>
+      <div class="nav-links">
+        <button class="nav-link" data-target="homeSection" id="navHome">Home</button>
+        <button class="nav-link" data-target="featuredSection" id="navFeatured">Featured</button>
+        <button class="nav-link" data-target="categoriesSection" id="navCategories">Categories</button>
+        <button class="btn nav-add" data-target="submitSection" id="navAddProduct">Add product</button>
+        <button class="ghost nav-link" id="navAccount">Sign in</button>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div class="hero__meta">
+        <p class="eyebrow">Caylin Catalog</p>
+        <h1>Modern curation of Caylin products</h1>
+        <p class="lede">friendly listing <a href="https://caylin.wed2c.com/" rel="noreferrer">caylin.wed2c.com</a> with clean visuals, fast filters, and direct product purchase</p>
+        <div class="actions">
+          <label class="search">
+            <span class="search__icon">?</span>
+            <input id="searchInput" name="query" type="search" placeholder="Search dresses, accessories, decor..." autocomplete="off">
+          </label>
+          <div class="pill-row" id="categoryFilters"></div>
+        </div>
+        <div id="statusMessage" class="status">Loading products...</div>
+      </div>
+     
+    </header>
+
+    <main id="homeSection">
+      <section class="auto-carousel" aria-label="Auto-scrolling highlights">
+        <div class="auto-carousel__head">
+          <p class="eyebrow">Fresh picks</p>
+          <h3>Glance & go</h3>
+          <p class="muted">Auto-rolling landscape strip with product photo, title, and price.</p>
+        </div>
+        <div class="auto-carousel__viewport">
+          <div class="auto-carousel__track" id="autoCarouselTrack"></div>
+        </div>
+      </section>
+    <section class="categories-section" id="categoriesSection">
+    </section>
+      <div class="content-layout">
+        <div class="catalog-column">
+          <section class="grid" id="productGrid" aria-live="polite"></section>
+          <div class="load-more" id="loadMoreContainer">
+            <button class="btn load-more__button" type="button" id="loadMoreBtn">Show more products</button>
+            <p class="muted load-more__status" id="loadMoreStatus">Loading products...</p>
+            <div class="load-more__sentinel" id="loadMoreSentinel" aria-hidden="true"></div>
+          </div>
+        </div>
+        <aside class="quicklist" id="quickList" aria-label="Quick product list"></aside>
+      </div>
+    </main>
+
+    <section class="featured-section" id="communitySection">
+      <div class="section-head">
+        <p class="eyebrow">Community</p>
+        <h2>Published Products</h2>
+        <p class="lede" id="communityStatus">Awaiting team-approved submissions.</p>
+      </div>
+      <section class="grid" id="communityGrid" aria-live="polite"></section>
+    </section>
+
+    <section class="featured-section" id="featuredSection">
+      <div class="section-head">
+        <p class="eyebrow">Highlights</p>
+        <h2>Featured products</h2>
+        <p class="lede" id="featuredStatus">Loaded</p>
+      </div>
+      <section class="grid" id="featuredGrid" aria-live="polite"></section>
+    </section>
+
+    <section class="packages-section" id="packagesSection">
+      <div class="section-head">
+        <p class="eyebrow">Packages</p>
+        <h2>Submission Packages</h2>
+        <p class="lede">Choose a package to request more submission slots.</p>
+      </div>
+      <div class="package-grid" id="packageGrid"></div>
+    </section>
+
+    <section class="profile-section is-hidden" id="profileSection">
+      <div class="panel-head">
+        <p class="eyebrow">Your account</p>
+        <h2>Manage your submissions</h2>
+        <p class="lede" id="profileStatus">Sign in to manage your products.</p>
+      </div>
+      <div class="profile-meta" id="profileInfo"></div>
+      <div class="profile-submissions" id="profileSubmissionList"></div>
+      <div class="purchase-card">
+        <div class="panel-head">
+          <p class="eyebrow">Upgrade</p>
+          <h3>Request more submissions</h3>
+          <p class="muted">Send a payment and submit your transaction to upgrade your package.</p>
+        </div>
+        <div class="wallet-display" id="walletDisplay"></div>
+        <form id="purchaseForm" class="submit-form">
+          <div class="inline-fields">
+            <div class="field">
+              <label for="purchasePackage">Package</label>
+              <select id="purchasePackage" required>
+                <option value="">Select a package</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="purchaseAmount">Amount sent (USD equivalent)</label>
+              <input id="purchaseAmount" type="number" min="1" step="0.01" placeholder="1.00" required>
+            </div>
+          </div>
+          <div class="inline-fields">
+            <div class="field">
+              <label for="purchaseNetwork">Network</label>
+              <input id="purchaseNetwork" type="text" placeholder="e.g., TRON (TRX)" required>
+            </div>
+            <div class="field">
+              <label for="purchaseTxId">Transaction ID / Hash</label>
+              <input id="purchaseTxId" type="text" placeholder="Paste TX hash" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="purchaseNote">Note (optional)</label>
+            <textarea id="purchaseNote" placeholder="Any extra info for admin"></textarea>
+          </div>
+          <div class="cta-row">
+            <button type="submit" class="btn" id="purchaseSubmit">Submit request</button>
+            <span class="submit-status" id="purchaseStatus" data-tone="muted">Minimum $1.</span>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="submit-section is-hidden" id="submitSection">
+      <div class="submit-card">
+        <div class="panel-head">
+          <p class="eyebrow">Contribute</p>
+          <h2>Submit your product</h2>
+          <p class="lede">Share your product details. An admin will review and publish before it appears in this catalog.</p>
+        </div>
+        <form id="submitProductForm" class="submit-form">
+          <div class="field">
+            <label for="submitTitle">Product title</label>
+            <input id="submitTitle" name="title" type="text" placeholder="Lace bridal gown" required>
+          </div>
+          <div class="field">
+            <label for="submitDescription">Description</label>
+            <textarea id="submitDescription" name="description" placeholder="Short description of the product" required></textarea>
+          </div>
+          <div class="inline-fields">
+            <div class="field">
+              <label for="submitLink">Product link</label>
+              <input id="submitLink" name="link" type="url" placeholder="https://example.com/product" required>
+            </div>
+            <div class="field">
+              <label for="submitCategory">Category (optional)</label>
+              <select id="submitCategory" name="category">
+                <option value="">Choose a category</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="submitTags">Tags (comma separated, optional)</label>
+            <input id="submitTags" name="tags" type="text" placeholder="veil, tulle, cathedral">
+          </div>
+          <div class="inline-fields">
+            <div class="field">
+              <label for="submitContactMethod">Contact method</label>
+              <select id="submitContactMethod" name="contactMethod">
+                <option value="whatsapp">WhatsApp</option>
+                <option value="telegram">Telegram</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="submitContactValue">Contact number / handle</label>
+              <input id="submitContactValue" name="contactValue" type="text" placeholder="+971 50 123 4567 or @username" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="submitImage">Product picture</label>
+            <input id="submitImage" name="image" type="file" accept="image/*" required>
+            <small>Images are uploaded to public server so do not upload personal information</small>
+          </div>
+          <div class="cta-row submit-actions">
+            <button type="submit" class="btn" id="submitButton">Submit for approval</button>
+            <span class="submit-status" id="submitStatus" data-tone="muted">team approval is required before publishing.</span>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <aside id="productDrawer" class="drawer" aria-hidden="true">
+      <div class="drawer__content">
+        <button class="drawer__close" id="drawerClose" aria-label="Close details">x</button>
+        <div class="drawer__media">
+          <div class="drawer__badge" id="drawerBadge"></div>
+          <img id="drawerImage" src="" alt="">
+        </div>
+        <div class="drawer__body">
+          <p class="eyebrow" id="drawerCategory"></p>
+          <h2 id="drawerTitle"></h2>
+          <p class="price" id="drawerPrice"></p>
+          <p class="description" id="drawerDescription"></p>
+          <div class="tags" id="drawerTags"></div>
+          <div class="cta-row">
+            <a id="drawerSourceLink" class="btn" rel="noopener">View on caylin.wed2c.com</a>
+            <a id="drawerShare" class="ghost">Copy link</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <footer class="footer">
+      <div>
+        <strong>Caylin Shop</strong>
+        <p>Static-friendly clone of caylin.wed2c.com, live data and SEO-friendly routing.</p>
+      </div>
+      <div class="footer__links">
+        <a href="/sitemap.xml">Sitemap</a>
+        <a href="/robots.txt">Robots.txt</a>
+      </div>
+    </footer>
+  </div>
+
+  <button class="fab" id="submitFab" aria-label="Submit a product">+</button>
+
+  <div class="modal" id="authModal" aria-hidden="true">
+    <div class="modal__content" role="dialog" aria-labelledby="authTitle">
+      <button class="modal__close" id="authClose" aria-label="Close authentication dialog">x</button>
+      <div class="modal__head">
+        <p class="eyebrow">Account</p>
+        <h2 id="authTitle">Access your account</h2>
+        <div class="auth-tabs">
+          <button class="ghost auth-tab auth-tab--active" data-mode="login">Login</button>
+          <button class="ghost auth-tab" data-mode="signup">Sign up</button>
+          <button class="ghost auth-tab" data-mode="reset">Reset password</button>
+        </div>
+        <p class="muted" id="authModalStatus">Enter your email and password.</p>
+      </div>
+      <form id="authFormModal" class="submit-form">
+        <div class="field">
+          <label for="authEmailModal">Email</label>
+          <input id="authEmailModal" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field auth-password-field">
+          <label for="authPasswordModal">Password</label>
+          <input id="authPasswordModal" name="password" type="password" autocomplete="current-password">
+        </div>
+        <div class="cta-row">
+          <button type="submit" class="btn" id="authSubmitModal">Continue</button>
+          <button type="button" class="ghost" id="authLogoutModal">Log out</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <noscript>
+    <div class="noscript">Enable JavaScript to load products from Firebase RTDB.</div>
+  </noscript>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
