@@ -94,7 +94,11 @@ const defaults = {
   description: (document.querySelector('meta[name="description"]') || {}).content || '',
   canonical: (document.querySelector('link[rel="canonical"]') || {}).href || window.location.href,
   ogTitle: (document.querySelector('meta[property="og:title"]') || {}).content || '',
-  ogDescription: (document.querySelector('meta[property="og:description"]') || {}).content || ''
+  ogDescription: (document.querySelector('meta[property="og:description"]') || {}).content || '',
+  ogImage: (document.querySelector('meta[property="og:image"]') || {}).content || '',
+  twitterTitle: (document.querySelector('meta[name="twitter:title"]') || {}).content || '',
+  twitterDescription: (document.querySelector('meta[name="twitter:description"]') || {}).content || '',
+  twitterImage: (document.querySelector('meta[name="twitter:image"]') || {}).content || ''
 };
 
 const PAGE_SIZE = 15;
@@ -1163,7 +1167,9 @@ const applyFilters = () => {
 const updateMetaForProduct = (product) => {
   document.title = `${product.title} | Caylin Shop`;
   const detailUrl = buildDetailUrl(product);
-  const desc = product.description || defaults.description;
+  const fullDesc = product.description || defaults.description;
+  const desc = fullDesc.length > 180 ? `${fullDesc.slice(0, 177)}...` : fullDesc;
+  const image = product.image || defaults.ogImage || defaults.twitterImage;
 
   const descriptionMeta = document.querySelector('meta[name="description"]');
   if (descriptionMeta) descriptionMeta.content = desc;
@@ -1178,7 +1184,14 @@ const updateMetaForProduct = (product) => {
   const ogUrl = document.querySelector('meta[property="og:url"]');
   if (ogUrl) ogUrl.content = detailUrl;
   const ogImage = document.querySelector('meta[property="og:image"]');
-  if (ogImage) ogImage.content = product.image;
+  if (ogImage && image) ogImage.content = image;
+
+  const twTitle = document.querySelector('meta[name="twitter:title"]');
+  if (twTitle) twTitle.content = document.title;
+  const twDescription = document.querySelector('meta[name="twitter:description"]');
+  if (twDescription) twDescription.content = desc;
+  const twImage = document.querySelector('meta[name="twitter:image"]');
+  if (twImage && image) twImage.content = image;
 };
 
 const resetMeta = () => {
@@ -1193,6 +1206,14 @@ const resetMeta = () => {
   if (ogDescription) ogDescription.content = defaults.ogDescription || defaults.description;
   const ogUrl = document.querySelector('meta[property="og:url"]');
   if (ogUrl) ogUrl.content = defaults.canonical;
+  const ogImage = document.querySelector('meta[property="og:image"]');
+  if (ogImage && defaults.ogImage) ogImage.content = defaults.ogImage;
+  const twTitle = document.querySelector('meta[name="twitter:title"]');
+  if (twTitle) twTitle.content = defaults.twitterTitle || defaults.title;
+  const twDescription = document.querySelector('meta[name="twitter:description"]');
+  if (twDescription) twDescription.content = defaults.twitterDescription || defaults.description;
+  const twImage = document.querySelector('meta[name="twitter:image"]');
+  if (twImage && defaults.twitterImage) twImage.content = defaults.twitterImage;
 };
 
 const buildDetailUrl = (product) => {
