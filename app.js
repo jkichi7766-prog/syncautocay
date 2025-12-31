@@ -78,6 +78,7 @@ const ui = {
   purchaseSubmit: document.getElementById('purchaseSubmit'),
   purchaseStatus: document.getElementById('purchaseStatus'),
   walletDisplay: document.getElementById('walletDisplay'),
+  totalProducts: document.getElementById('totalProducts'),
   authModal: document.getElementById('authModal'),
   authClose: document.getElementById('authClose'),
   authFormModal: document.getElementById('authFormModal'),
@@ -415,6 +416,15 @@ const updateNavAccount = () => {
     ui.navAccount.textContent = 'Sign in';
     ui.navAccount.classList.remove('nav-link--active');
   }
+};
+
+const updateTotals = () => {
+  if (!ui.totalProducts) return;
+  const totalMain = state.allProducts.length;
+  const totalCommunity = state.communityProducts.length;
+  const parts = [`Total products: ${totalMain}`];
+  if (totalCommunity) parts.push(`Community: ${totalCommunity}`);
+  ui.totalProducts.textContent = parts.join(' • ');
 };
 
 const renderProfileInfo = () => {
@@ -1328,6 +1338,7 @@ const startRealtimeListener = (db) => {
       setStatus(
         `Showing ${visibleMain} of ${state.allProducts.length} main product(s) and ${state.communityProducts.length} community product(s) from Firebase RTDB`
       );
+      updateTotals();
       setLoading(false);
     },
     (error) => {
@@ -1361,6 +1372,7 @@ const loadFallback = () => {
   renderFeatured(sampleProducts);
   applyFilters();
   hydrateFromUrl();
+  updateTotals();
   setLoading(false);
 };
 
