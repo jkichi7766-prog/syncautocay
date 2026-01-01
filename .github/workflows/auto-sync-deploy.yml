@@ -1,0 +1,52 @@
+name: Auto Sync and Deploy
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # daily at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sync-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Write service account for admin tasks
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > scripts/serviceac.json
+
+      - name: Sync products
+        run: node scripts/sync-caylin-to-rtdb.js
+        env:
+          EXTRA_JOB_IDS: ""   # optional comma-separated IDs to force-fetch
+
+      - name: Clean products
+        run: node scripts/clean-products.js
+
+      - name: Regenerate sitemap
+        run: |
+          export FIREBASE_DB_URL="${{ secrets.FIREBASE_DB_URL || 'https://caylin-aad1b-default-rtdb.firebaseio.com' }}"
+          export SITE_BASE_URL="${{ secrets.SITE_BASE_URL || 'https://caylin.shop' }}"
+          export DATABASE_PATH="${{ secrets.DATABASE_PATH || 'products' }}"
+          node scripts/generate-sitemap.js
+
+      - name: Regenerate static pages
+        run: |
+          export FIREBASE_DB_URL="${{ secrets.FIREBASE_DB_URL || 'https://caylin-aad1b-default-rtdb.firebaseio.com' }}"
+          export SITE_BASE_URL="${{ secrets.SITE_BASE_URL || 'https://caylin.shop' }}"
+          export DATABASE_PATH="${{ secrets.DATABASE_PATH || 'products' }}"
+          node scripts/generate-static-products.js
+
+      - name: Deploy to Firebase Hosting
+        run: firebase deploy --only hosting --project caylin-aad1b --token "$FIREBASE_TOKEN"
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
