@@ -795,10 +795,21 @@ h2 {
   min-width: 160px;
 }
 
-.quicklist {
+.sidebar {
+  display: grid;
+  gap: 12px;
   position: sticky;
   top: 84px;
   align-self: start;
+}
+
+.quicklist {
+  position: static;
+  align-self: stretch;
+}
+
+.recentlist {
+  position: static;
 }
 
 .quicklist__inner {
@@ -814,6 +825,10 @@ h2 {
 .quicklist__head h4 {
   margin: 4px 0;
   font-size: 18px;
+}
+
+.recentlist .quicklist__head h4 {
+  font-size: 17px;
 }
 
 .quicklist__hint {
@@ -906,39 +921,43 @@ h2 {
 .drawer__content {
   background: #ffffff;
   border: 1px solid rgba(34, 197, 94, 0.2);
-  border-radius: 18px;
+  border-radius: 22px;
   width: min(980px, 100%);
   max-height: 90vh;
   overflow: hidden;
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   position: relative;
-  box-shadow: 0 18px 40px rgba(12, 90, 58, 0.16);
+  box-shadow: 0 28px 80px rgba(12, 90, 58, 0.18);
 }
 
 .drawer__media {
   position: relative;
-  background: #ffffff;
+  background: radial-gradient(circle at 20% 20%, rgba(98, 216, 108, 0.12), transparent 45%), #ffffff;
   border-right: 1px solid rgba(34, 197, 94, 0.12);
   display: grid;
   place-items: center;
   overflow: hidden;
+  padding: 12px;
 }
 
 .drawer__media img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  border-radius: 18px;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.12);
 }
 
 .drawer__badge {
   position: absolute;
   top: 16px;
   left: 16px;
+  z-index: 2;
 }
 
 .drawer__body {
-  padding: 24px;
+  padding: 24px 24px 28px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -948,6 +967,7 @@ h2 {
   position: relative;
   background: #ffffff;
   color: #0f172a;
+  background-image: linear-gradient(180deg, rgba(244, 255, 242, 0.6), rgba(255, 255, 255, 0.85));
 }
 
 .drawer__close {
@@ -977,6 +997,9 @@ h2 {
   padding-right: 6px;
   color: #1f2937;
   line-height: 1.6;
+  background: rgba(244, 255, 242, 0.6);
+  padding: 10px 12px;
+  border-radius: 12px;
 }
 
 .drawer__body .tags {
@@ -990,6 +1013,7 @@ h2 {
   padding-top: 12px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 1) 100%);
   border-top: 1px solid rgba(34, 197, 94, 0.14);
+  padding-bottom: 6px;
 }
 
 .footer {

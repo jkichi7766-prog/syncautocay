@@ -21,6 +21,7 @@ import {
 const ui = {
   grid: document.getElementById('productGrid'),
   quickList: document.getElementById('quickList'),
+  recentList: document.getElementById('recentList'),
   loadMoreBtn: document.getElementById('loadMoreBtn'),
   loadMoreContainer: document.getElementById('loadMoreContainer'),
   loadMoreStatus: document.getElementById('loadMoreStatus'),
@@ -87,7 +88,8 @@ const ui = {
   authSubmitModal: document.getElementById('authSubmitModal'),
   authLogoutModal: document.getElementById('authLogoutModal'),
   authModalStatus: document.getElementById('authModalStatus'),
-  authTabs: Array.from(document.querySelectorAll('.auth-tab'))
+  authTabs: Array.from(document.querySelectorAll('.auth-tab')),
+  newGrid: document.getElementById('newProductGrid')
 };
 
 const defaults = {
@@ -97,6 +99,8 @@ const defaults = {
   ogTitle: (document.querySelector('meta[property="og:title"]') || {}).content || '',
   ogDescription: (document.querySelector('meta[property="og:description"]') || {}).content || '',
   ogImage: (document.querySelector('meta[property="og:image"]') || {}).content || '',
+  ogImageWidth: (document.querySelector('meta[property="og:image:width"]') || {}).content || '',
+  ogImageHeight: (document.querySelector('meta[property="og:image:height"]') || {}).content || '',
   twitterTitle: (document.querySelector('meta[name="twitter:title"]') || {}).content || '',
   twitterDescription: (document.querySelector('meta[name="twitter:description"]') || {}).content || '',
   twitterImage: (document.querySelector('meta[name="twitter:image"]') || {}).content || ''
@@ -118,6 +122,7 @@ const state = {
   userSubmissions: [],
   packages: [],
   walletSettings: {},
+  recentlyViewed: [],
   showAllCategories: false,
   categoryCounts: {}
 };
@@ -289,12 +294,21 @@ const normalizeProduct = (id, raw = {}) => {
     raw.productId ||
     raw.slug ||
     `product-${(globalThis.crypto?.randomUUID && globalThis.crypto.randomUUID()) || Math.random().toString(36).slice(2)}`;
+  const titleCandidate = (raw.title || raw.name || raw.productName || '').trim();
+  if (!titleCandidate) return null;
   const imageList = ensureArray(
     raw.images ||
       raw.gallery ||
       raw.photos ||
       raw.thumbs ||
       raw.image ||
+      raw.imageUrl ||
+      raw.mainPic ||
+      raw.picUrl ||
+      raw.coverImage ||
+      raw.coverPhoto ||
+      raw.photoUrlList ||
+      raw.photoUrls ||
       raw.thumbnail ||
       raw.mainPhotoUrl ||
       raw.mainImage ||
@@ -320,8 +334,8 @@ const normalizeProduct = (id, raw = {}) => {
   return {
     id: fallbackId,
     slug: raw.slug || raw.handle || raw.urlKey || slugify(raw.title || raw.name || raw.productName, fallbackId),
-    title: raw.title || raw.name || raw.productName || 'Untitled product',
-    description: raw.description || raw.shortDescription || raw.seoDescription || raw.subtitle || '',
+    title: titleCandidate,
+    description: raw.description || raw.shortDescription || raw.seoDescription || raw.subtitle || raw.category || '',
     price: numericPrice,
     category: raw.category || raw.collection || raw.type || raw.categoryName || 'Featured',
     tags,
@@ -547,9 +561,11 @@ const renderWallet = () => {
 
 const getRouteFromLocation = () => {
   const params = new URLSearchParams(window.location.search);
-  const querySlug = params.get('postname');
+  const querySlug = params.get('postname') || params.get('slug');
   const queryId = params.get('product');
-  const pathSlug = decodeURIComponent((window.location.pathname || '').replace(/^\//, '') || '');
+  const path = window.location.pathname || '';
+  const match = path.match(/\/product\/([^/?#]+)/i);
+  const pathSlug = match ? decodeURIComponent(match[1]) : decodeURIComponent(path.replace(/^\/+/, '') || '');
   return { querySlug, queryId, pathSlug };
 };
 
@@ -865,6 +881,23 @@ const renderProducts = (products) => {
   updateLoadMoreUi(products.length, visibleProducts.length);
 };
 
+const renderNewProducts = () => {
+  if (!ui.newGrid) return;
+  ui.newGrid.innerHTML = '';
+  const sorted = [...state.allProducts].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const top = sorted.slice(0, 8);
+  if (!top.length) {
+    const empty = document.createElement('div');
+    empty.className = 'status';
+    empty.textContent = 'No recent products.';
+    ui.newGrid.appendChild(empty);
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  top.forEach((product) => fragment.appendChild(buildProductCard(product)));
+  ui.newGrid.appendChild(fragment);
+};
+
 const loadMoreProducts = () => {
   if (!state.filtered.length) return;
   const nextCount = Math.min(state.visibleCount + PAGE_SIZE, state.filtered.length);
@@ -928,6 +961,13 @@ const startQuickListAutoScroll = (listEl) => {
     ['mouseleave', 'touchend', 'focusout'].forEach((ev) => listEl.addEventListener(ev, resume));
     listEl.dataset.autoscrollBound = 'true';
   }
+};
+
+const addRecentlyViewed = (product) => {
+  if (!product || !product.id) return;
+  const deduped = [product, ...(state.recentlyViewed || []).filter((p) => p.id !== product.id)];
+  state.recentlyViewed = deduped.slice(0, 8);
+  renderRecentList();
 };
 
 const stopAutoCarousel = () => {
@@ -995,6 +1035,35 @@ const renderQuickList = (products) => {
 
   container.appendChild(listEl);
   ui.quickList.appendChild(container);
+};
+
+const renderRecentList = () => {
+  if (!ui.recentList) return;
+  ui.recentList.innerHTML = '';
+  const recent = state.recentlyViewed || [];
+
+  const container = document.createElement('div');
+  container.className = 'quicklist__inner recentlist__inner';
+  container.innerHTML = `
+    <div class="quicklist__head">
+      <p class="eyebrow">Recently viewed</p>
+      <h4>Latest products</h4>
+      <p class="muted quicklist__hint">Your last opened items.</p>
+    </div>
+  `;
+
+  const listEl = document.createElement('div');
+  listEl.className = 'quicklist__items';
+  if (!recent.length) {
+    const empty = document.createElement('div');
+    empty.className = 'status';
+    empty.textContent = 'No products viewed yet.';
+    listEl.appendChild(empty);
+  } else {
+    recent.forEach((product) => listEl.appendChild(buildQuickListItem(product)));
+  }
+  container.appendChild(listEl);
+  ui.recentList.appendChild(container);
 };
 
 const buildAutoCard = (product) => {
@@ -1177,8 +1246,8 @@ const applyFilters = () => {
 const updateMetaForProduct = (product) => {
   document.title = `${product.title} | Caylin Shop`;
   const detailUrl = buildDetailUrl(product);
-  const fullDesc = product.description || defaults.description;
-  const desc = fullDesc.length > 180 ? `${fullDesc.slice(0, 177)}...` : fullDesc;
+  const fullDesc = (product.description || defaults.description || '').replace(/\s+/g, ' ').trim();
+  const desc = fullDesc.length > 160 ? `${fullDesc.slice(0, 157)}...` : fullDesc;
   const image = product.image || defaults.ogImage || defaults.twitterImage;
 
   const descriptionMeta = document.querySelector('meta[name="description"]');
@@ -1195,6 +1264,10 @@ const updateMetaForProduct = (product) => {
   if (ogUrl) ogUrl.content = detailUrl;
   const ogImage = document.querySelector('meta[property="og:image"]');
   if (ogImage && image) ogImage.content = image;
+  const ogWidth = document.querySelector('meta[property="og:image:width"]');
+  if (ogWidth) ogWidth.content = '1200';
+  const ogHeight = document.querySelector('meta[property="og:image:height"]');
+  if (ogHeight) ogHeight.content = '630';
 
   const twTitle = document.querySelector('meta[name="twitter:title"]');
   if (twTitle) twTitle.content = document.title;
@@ -1218,6 +1291,10 @@ const resetMeta = () => {
   if (ogUrl) ogUrl.content = defaults.canonical;
   const ogImage = document.querySelector('meta[property="og:image"]');
   if (ogImage && defaults.ogImage) ogImage.content = defaults.ogImage;
+  const ogWidth = document.querySelector('meta[property="og:image:width"]');
+  if (ogWidth && defaults.ogImageWidth) ogWidth.content = defaults.ogImageWidth;
+  const ogHeight = document.querySelector('meta[property="og:image:height"]');
+  if (ogHeight && defaults.ogImageHeight) ogHeight.content = defaults.ogImageHeight;
   const twTitle = document.querySelector('meta[name="twitter:title"]');
   if (twTitle) twTitle.content = defaults.twitterTitle || defaults.title;
   const twDescription = document.querySelector('meta[name="twitter:description"]');
@@ -1227,11 +1304,9 @@ const resetMeta = () => {
 };
 
 const buildDetailUrl = (product) => {
-  const url = new URL(window.location.href);
-  url.pathname = `/${product.slug || product.id}`;
-  url.searchParams.set('postname', product.slug || product.id);
-  url.searchParams.set('product', product.id);
-  return url.toString();
+  const base = window.location.origin || '';
+  const slug = encodeURIComponent(product.slug || product.id);
+  return `${base}/product/${slug}`;
 };
 
 const openDrawer = (product, pushState) => {
@@ -1251,12 +1326,10 @@ const openDrawer = (product, pushState) => {
   ui.drawerShare.onclick = () => shareLink(buildDetailUrl(product));
 
   updateMetaForProduct(product);
+  addRecentlyViewed(product);
 
   if (pushState) {
-    const url = new URL(window.location.href);
-    url.pathname = `/${product.slug || product.id}`;
-    url.searchParams.set('product', product.id);
-    url.searchParams.set('postname', product.slug || product.id);
+    const url = buildDetailUrl(product);
     window.history.pushState({ productId: product.id }, '', url);
   }
 
@@ -1290,6 +1363,50 @@ const shareLink = async (url) => {
   }
 };
 
+const prefetchMetaFromUrl = async () => {
+  const { queryId, querySlug, pathSlug } = getRouteFromLocation();
+  const slug = querySlug || pathSlug;
+  if (!firebaseConfig?.databaseURL) return;
+  const base = firebaseConfig.databaseURL.replace(/\/$/, '');
+
+  const fetchById = async (id) => {
+    const path = `${databasePath || 'products'}/${id}.json`;
+    const res = await fetch(`${base}/${path}`);
+    if (!res.ok) return null;
+    return res.json();
+  };
+
+  const fetchBySlug = async (slugValue) => {
+    if (!slugValue) return null;
+    const path = `${databasePath || 'products'}.json?orderBy=%22slug%22&equalTo=%22${encodeURIComponent(slugValue)}%22`;
+    const res = await fetch(`${base}/${path}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data) return null;
+    const first = Object.entries(data)[0];
+    if (!first) return null;
+    const [id, value] = first;
+    return normalizeProduct(id, value);
+  };
+
+  try {
+    if (queryId) {
+      const data = await fetchById(queryId);
+      if (data && data.title) {
+        const normalized = normalizeProduct(queryId, data);
+        updateMetaForProduct(normalized);
+        return;
+      }
+    }
+    const bySlug = await fetchBySlug(slug);
+    if (bySlug) {
+      updateMetaForProduct(bySlug);
+    }
+  } catch (err) {
+    console.warn('Prefetch meta failed', err);
+  }
+};
+
 const hydrateFromUrl = () => {
   const { querySlug, queryId, pathSlug } = getRouteFromLocation();
   const target =
@@ -1308,11 +1425,11 @@ const normalizeList = (raw) => {
   if (Array.isArray(raw)) {
     return raw
       .map((item, index) => normalizeProduct(item?.id || index, item))
-      .filter((item) => item.title);
+      .filter(Boolean);
   }
   return Object.entries(raw)
     .map(([key, value]) => normalizeProduct(key, value))
-    .filter((item) => item.title);
+    .filter(Boolean);
 };
 
 const startRealtimeListener = (db) => {
@@ -1333,6 +1450,7 @@ const startRealtimeListener = (db) => {
       refreshCategories(state.allProducts);
       renderFeatured(products);
       applyFilters();
+      renderNewProducts();
       hydrateFromUrl();
       const visibleMain = Math.min(state.visibleCount, state.allProducts.length);
       setStatus(
@@ -1370,6 +1488,7 @@ const loadFallback = () => {
   state.communityProducts = [];
   refreshCategories(sampleProducts);
   renderFeatured(sampleProducts);
+  renderNewProducts();
   applyFilters();
   hydrateFromUrl();
   updateTotals();
@@ -1668,6 +1787,7 @@ const init = () => {
   ui.drawer.addEventListener('click', (evt) => {
     if (evt.target === ui.drawer) closeDrawer(true);
   });
+  prefetchMetaFromUrl();
   window.addEventListener('keydown', (evt) => {
     if (evt.key === 'Escape' && ui.drawer.classList.contains('drawer--open')) {
       closeDrawer(true);
@@ -1676,6 +1796,7 @@ const init = () => {
   window.addEventListener('popstate', () => hydrateFromUrl());
   setLoading(true);
   showSectionsFor('home');
+  renderRecentList();
   setupNavigation();
   setupSubmissionUi();
   setupAuthModal();

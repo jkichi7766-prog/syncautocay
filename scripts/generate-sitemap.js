@@ -10,7 +10,18 @@ const path = require('path');
 
 const fetchImpl = globalThis.fetch;
 
-const dbUrl = (process.env.FIREBASE_DB_URL || '').replace(/\.json$/, '');
+const configPath = path.join(__dirname, '..', 'firebase-config.js');
+const fallbackDbUrl = (() => {
+  try {
+    const txt = fs.readFileSync(configPath, 'utf8');
+    const match = txt.match(/databaseURL\s*:\s*['"]([^'"]+)['"]/);
+    return match ? match[1] : '';
+  } catch (err) {
+    return '';
+  }
+})();
+
+const dbUrl = (process.env.FIREBASE_DB_URL || fallbackDbUrl || '').replace(/\.json$/, '');
 const siteBase = process.env.SITE_BASE_URL || 'https://caylin.shop';
 const dataPath = process.env.DATABASE_PATH || 'products';
 const targetPath = path.join(__dirname, '..', 'sitemap.xml');
@@ -21,7 +32,7 @@ if (!fetchImpl) {
 }
 
 if (!dbUrl) {
-  console.error('Set FIREBASE_DB_URL (e.g. https://your-project.firebaseio.com).');
+  console.error('Set FIREBASE_DB_URL (e.g. https://your-project.firebaseio.com) or add databaseURL to firebase-config.js.');
   process.exit(1);
 }
 
@@ -70,7 +81,7 @@ const xmlEscape = (value) =>
 
 const buildProductUrl = (product) => {
   const slug = product.slug || product.title || product.id;
-  const url = `${siteBase}/?product=${encodeURIComponent(product.id)}&postname=${encodeURIComponent(slug)}`;
+  const url = `${siteBase.replace(/\/$/, '')}/product/${encodeURIComponent(slug)}`;
   return xmlEscape(url);
 };
 

@@ -18,6 +18,8 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://caylin.shop/">
   <meta property="og:image" content="https://caylin.wed2c.com/favicon.ico">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="Caylin Shop">
   <meta name="twitter:site" content="@caylinshop">
   <meta name="twitter:title" content="Caylin Shop | Modern Wedding & Lifestyle Finds">
@@ -104,10 +106,21 @@
           <div class="auto-carousel__track" id="autoCarouselTrack"></div>
         </div>
       </section>
-    <section class="categories-section" id="categoriesSection">
-    </section>
+      <section class="categories-section" id="categoriesSection">
+      </section>
       <div class="content-layout">
         <div class="catalog-column">
+          <section class="section-head">
+            <p class="eyebrow">Latest</p>
+            <h2>New products</h2>
+            <p class="muted">Most recently synced items.</p>
+          </section>
+          <section class="grid" id="newProductGrid" aria-live="polite"></section>
+          <section class="section-head" style="margin-top: 18px;">
+            <p class="eyebrow">All products</p>
+            <h2>Browse everything</h2>
+            <p class="muted">Search, filter, and load more from the full catalog.</p>
+          </section>
           <section class="grid" id="productGrid" aria-live="polite"></section>
           <div class="load-more" id="loadMoreContainer">
             <button class="btn load-more__button" type="button" id="loadMoreBtn">Show more products</button>
@@ -115,7 +128,10 @@
             <div class="load-more__sentinel" id="loadMoreSentinel" aria-hidden="true"></div>
           </div>
         </div>
-        <aside class="quicklist" id="quickList" aria-label="Quick product list"></aside>
+        <aside class="sidebar">
+          <div class="recentlist" id="recentList" aria-label="Recently viewed products"></div>
+          <div class="quicklist" id="quickList" aria-label="Quick product list"></div>
+        </aside>
       </div>
     </main>
 
@@ -268,7 +284,7 @@
           <p class="description" id="drawerDescription"></p>
           <div class="tags" id="drawerTags"></div>
           <div class="cta-row">
-            <a id="drawerSourceLink" class="btn" rel="noopener">View on caylin.wed2c.com</a>
+            <a id="drawerSourceLink" class="btn" rel="noopener">View More</a>
             <a id="drawerShare" class="ghost">Copy link</a>
           </div>
         </div>

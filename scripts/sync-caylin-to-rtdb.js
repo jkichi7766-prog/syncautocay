@@ -93,6 +93,13 @@ const normalize = (raw, idx) => {
   };
 };
 
+const isEmptyProduct = (p = {}) => {
+  const noTitle = !p.title || String(p.title).toLowerCase().includes('untitled product');
+  const noDesc = !p.description;
+  const defaultImage = !p.image || String(p.image).includes('default-small');
+  return noTitle && noDesc && defaultImage;
+};
+
 const collectProductsFromObject = (value, bucket = []) => {
   if (!value) return bucket;
   if (Array.isArray(value)) {
@@ -113,13 +120,20 @@ const collectProductsFromObject = (value, bucket = []) => {
   const page = await browser.newPage();
   const products = [];
 
+  const seenListUrls = new Set();
   page.on('response', async (res) => {
     const url = res.url();
-    if (url.includes('goods') || url.includes('product')) {
+    if (url.includes('goods') || url.includes('product') || url.includes('list')) {
       try {
         const data = await res.json();
         const list = data?.data?.list || data?.list || data?.records || [];
-        list.forEach((item, i) => products.push(normalize(item, i)));
+        if (Array.isArray(list) && list.length) {
+          list.forEach((item, i) => products.push(normalize(item, i)));
+          if (!seenListUrls.has(url)) {
+            seenListUrls.add(url);
+            console.log(`LIST ${list.length} -> ${url}`);
+          }
+        }
       } catch (err) {
         // Ignore non-JSON responses.
       }
@@ -139,7 +153,7 @@ const collectProductsFromObject = (value, bucket = []) => {
   }
   await page.waitForTimeout(5000);
   // Scroll and click to load more product calls
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     await page.mouse.wheel(0, 2000);
     await page.waitForTimeout(1500);
   }
@@ -151,11 +165,27 @@ const collectProductsFromObject = (value, bucket = []) => {
     }
   } catch {}
 
+  // Scrape any goodsDetails links present in the DOM for extra IDs.
+  try {
+    const linkIds = await page.evaluate(() => {
+      const ids = new Set();
+      Array.from(document.querySelectorAll('a[href]')).forEach((a) => {
+        const href = a.getAttribute('href') || '';
+        const match = href.match(/jobsProductId=([0-9]+)/);
+        if (match && match[1]) ids.add(match[1]);
+      });
+      return Array.from(ids);
+    });
+    linkIds.forEach((id) => products.push({ id }));
+    console.log(`Found ${linkIds.length} product ids from links on page.`);
+  } catch {}
+
   const unique = new Map();
   products.forEach((p, idx) => {
     const item = normalize(p, idx);
     if (item.id) unique.set(item.id, item);
   });
+  console.log(`Collected ${products.length} raw items, ${unique.size} unique ids before detail enrichment.`);
 
   // Include explicitly provided IDs
   EXTRA_JOB_IDS.forEach((id) => {
@@ -164,14 +194,19 @@ const collectProductsFromObject = (value, bucket = []) => {
 
   // Enrich with product detail pages to grab descriptions, better images, and accurate price.
   const detailPage = await browser.newPage();
+  const idQueue = Array.from(unique.keys());
   let count = 0;
-  for (const [id, item] of unique.entries()) {
-    if (count >= 40) break; // cap to avoid long runs
-     try {
+  let cursor = 0;
+  while (cursor < idQueue.length && count < 120) {
+    const id = idQueue[cursor];
+    const item = unique.get(id) || { id };
+    cursor += 1;
+
+    const fetchDetail = async () => {
       const detailUrl = `https://caylin.wed2c.com/goodsDetails?jobsProductId=${id}${
         item.recommendProductId ? `&recommendProductId=${item.recommendProductId}` : ''
       }&hyId=${HY_ID}`;
-      await detailPage.goto(detailUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await detailPage.goto(detailUrl, { waitUntil: 'domcontentloaded', timeout: 12000 });
       const detail = await detailPage.evaluate(() => window.__INITIAL_DATA__ || {});
       const productDetail =
         detail.productInfo ||
@@ -206,12 +241,25 @@ const collectProductsFromObject = (value, bucket = []) => {
         return '';
       });
 
-      // Grab visible images if available.
-      const scrapedImages = await detailPage.evaluate(() => {
+      // Grab visible images and any linked product ids for further crawling.
+      const { images: scrapedImages, linkedIds } = await detailPage.evaluate(() => {
         const imgs = Array.from(document.querySelectorAll('img'))
           .map((img) => img.getAttribute('src') || '')
-          .filter((src) => src && src.startsWith('http') && !src.includes('default-small'));
-        return imgs.slice(0, 8);
+          .filter((src) => src && src.startsWith('http') && !src.includes('default-small'))
+          .slice(0, 8);
+        const ids = Array.from(document.querySelectorAll('a[href]')).map((a) => {
+          const href = a.getAttribute('href') || '';
+          const m = href.match(/jobsProductId=([0-9]+)/);
+          return m && m[1] ? m[1] : null;
+        }).filter(Boolean);
+        return { images: imgs, linkedIds: ids };
+      });
+
+      linkedIds.forEach((linkedId) => {
+        if (!unique.has(linkedId)) {
+          unique.set(linkedId, { id: linkedId });
+          idQueue.push(linkedId);
+        }
       });
 
       const enriched = normalize(
@@ -223,7 +271,19 @@ const collectProductsFromObject = (value, bucket = []) => {
         },
         count
       );
-      unique.set(id, { ...item, ...enriched });
+      return enriched;
+    };
+
+    try {
+      let enriched = await fetchDetail();
+      // Retry once if still empty.
+      if (isEmptyProduct(enriched)) {
+        await detailPage.waitForTimeout(800);
+        enriched = await fetchDetail();
+      }
+      if (!isEmptyProduct(enriched)) {
+        unique.set(id, { ...item, ...enriched });
+      }
     } catch (err) {
       // keep existing item if detail fetch fails
     }
@@ -239,13 +299,32 @@ const collectProductsFromObject = (value, bucket = []) => {
   const existingSnap = await db.ref('products').once('value');
   const existing = existingSnap.val() || {};
   const merged = { ...existing };
+  const addedIds = [];
   unique.forEach((p, id) => {
-    merged[id] = { ...(existing[id] || {}), ...p, updatedAt: Date.now() };
+    // Skip if payload is essentially empty.
+    if (isEmptyProduct(p)) return;
+
+    // If existing has data, keep it unless existing is empty.
+    const existingItem = existing[id];
+    const existingIsEmpty = isEmptyProduct(existingItem);
+    if (existingItem && !existingIsEmpty) return;
+
+    merged[id] = { ...(existingItem || {}), ...p, updatedAt: Date.now(), createdAt: (existingItem && existingItem.createdAt) || Date.now() };
+    if (!existingItem || existingIsEmpty) addedIds.push(id);
+  });
+  // Drop undefined values and prune empty records.
+  const mergedClean = JSON.parse(JSON.stringify(merged)); // drop undefined values
+  let pruned = 0;
+  Object.keys(mergedClean).forEach((id) => {
+    if (isEmptyProduct(mergedClean[id])) {
+      delete mergedClean[id];
+      pruned += 1;
+    }
   });
 
   // Build category map
   const categoryMap = {};
-  Object.entries(merged).forEach(([id, product]) => {
+  Object.entries(mergedClean).forEach(([id, product]) => {
     const categories = [
       product.category || 'Uncategorized',
       ...ensureArray(product.tags || []).map((t) => `tag:${t}`)
@@ -256,10 +335,10 @@ const collectProductsFromObject = (value, bucket = []) => {
     });
   });
 
-  await db.ref('products').set(merged);
+  await db.ref('products').set(mergedClean);
   await db.ref('categories').set(categoryMap);
   console.log(
-    `Merged ${unique.size} fetched items; total ${Object.keys(merged).length} in /products, ${Object.keys(categoryMap).length} categories`
+    `Merged ${unique.size} fetched items; added ${addedIds.length} new; pruned ${pruned} empty; total ${Object.keys(mergedClean).length} in /products, ${Object.keys(categoryMap).length} categories`
   );
   await admin.app().delete();
   process.exit(0);
