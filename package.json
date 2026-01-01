@@ -1,0 +1,19 @@
+{
+  "name": "caylin-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sync, clean, generate, and deploy Caylin shop static site",
+  "scripts": {
+    "sync": "node scripts/sync-caylin-to-rtdb.js",
+    "clean": "node scripts/clean-products.js",
+    "sitemap": "node scripts/generate-sitemap.js",
+    "static": "node scripts/generate-static-products.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.1.1",
+    "playwright": "^1.42.1"
+  },
+  "devDependencies": {
+    "firebase-tools": "^15.1.0"
+  }
+}
