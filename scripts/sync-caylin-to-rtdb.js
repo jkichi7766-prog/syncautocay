@@ -140,7 +140,7 @@ const collectProductsFromObject = (value, bucket = []) => {
     }
   });
 
-  await page.goto('https://caylin.wed2c.com/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.goto('https://caylin.wed2c.com/searchPage?title=Shop%20Now/', { waitUntil: 'domcontentloaded', timeout: 60000 });
   try {
     const initialData = await page.evaluate(() => window.__INITIAL_DATA__ || null);
     if (initialData) {
