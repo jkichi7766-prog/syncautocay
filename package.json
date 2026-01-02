@@ -7,7 +7,8 @@
     "sync": "node scripts/sync-caylin-to-rtdb.js",
     "clean": "node scripts/clean-products.js",
     "sitemap": "node scripts/generate-sitemap.js",
-    "static": "node scripts/generate-static-products.js"
+    "static": "node scripts/generate-static-products.js",
+    "sync:clean": "node scripts/sync-caylin-to-rtdb.js && node scripts/clean-products.js"
   },
   "dependencies": {
     "firebase-admin": "^12.1.1",
