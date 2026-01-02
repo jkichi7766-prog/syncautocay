@@ -241,6 +241,12 @@ const slugify = (value, fallback) => {
     .slice(0, 120) || String(fallback || '').toLowerCase();
 };
 
+const formatDateTime = (ts) => {
+  const d = new Date(Number(ts));
+  if (Number.isNaN(d.getTime())) return 'Recently added';
+  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
 const toBase64 = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -751,6 +757,7 @@ const buildProductCard = (product) => {
   const ratingVal = product.rating || 4.5;
   const stars = '?????'.slice(0, Math.round(ratingVal)) || '';
   const badgeLabel = product.badge || 'Top pick';
+  const addedAt = product.updatedAt ? formatDateTime(product.updatedAt) : 'Recently added';
 
   card.innerHTML = `
     <div class="card__media">
@@ -772,6 +779,7 @@ const buildProductCard = (product) => {
         <span class="price pill-price">${priceLabel}</span>
         ${oldPrice ? `<span class="pill-old-price">${oldPrice}</span>` : ''}
       </div>
+      <p class="pill-time">Added: ${addedAt}</p>
       <div class="pill-actions">
         <button class="pill-cart" type="button" aria-label="View product">View</button>
         <button class="pill-buy" type="button" aria-label="Buy now">Buy it now</button>
@@ -1071,6 +1079,7 @@ const buildAutoCard = (product) => {
   const card = document.createElement('button');
   card.type = 'button';
   card.className = 'auto-card';
+  const addedAt = product.updatedAt ? formatDateTime(product.updatedAt) : 'Recently added';
   card.innerHTML = `
     <div class="auto-card__media">
       <img src="${product.image}" alt="${product.title}">
@@ -1078,6 +1087,7 @@ const buildAutoCard = (product) => {
     <div class="auto-card__body">
       <p class="auto-card__title">${product.title}</p>
       <p class="auto-card__price">${priceLabel}</p>
+      <p class="auto-card__time">${addedAt}</p>
     </div>
   `;
   card.addEventListener('click', (e) => {
